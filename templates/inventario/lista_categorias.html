@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Categorías - MotoShop{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-tags"></i> Gestión de Categorías</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'crear_categoria' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nueva Categoría
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    {% for categoria in categorias %}
+    <div class="col-md-3 mb-3">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-tag fs-1 text-primary"></i>
+                <h5 class="mt-2">{{ categoria.nombre }}</h5>
+                <span class="badge {% if categoria.estado %}bg-success{% else %}bg-secondary{% endif %}">
+                    {% if categoria.estado %}Activo{% else %}Inactivo{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            No hay categorías registradas
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Reportes - MotoShop{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-graph-up"></i> Reportes y Estadísticas</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <i class="bi bi-file-earmark-bar-graph fs-1 text-primary"></i>
+                <h5 class="mt-3">Reporte de Ventas</h5>
+                <p class="text-muted">Estadísticas de ventas por período</p>
+                <button class="btn btn-primary" disabled>Próximamente</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <i class="bi bi-box-seam fs-1 text-success"></i>
+                <h5 class="mt-3">Reporte de Stock</h5>
+                <p class="text-muted">Estado actual del inventario</p>
+                <button class="btn btn-success" disabled>Próximamente</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <i class="bi bi-people fs-1 text-info"></i>
+                <h5 class="mt-3">Reporte de Clientes</h5>
+                <p class="text-muted">Análisis de clientes</p>
+                <button class="btn btn-info" disabled>Próximamente</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1 @@
+# Los proveedores se administran desde apps.inventario

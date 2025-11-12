@@ -51,7 +51,11 @@
                                 </td>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-primary" 
-                                            onclick="agregarAlCarrito({{ producto.id }}, '{{ producto.descripcion|escapejs }}', {{ producto.precio_venta }}, {{ producto.stock }})">
+                                            data-id="{{ producto.id }}"
+                                            data-descripcion="{{ producto.descripcion }}"
+                                            data-precio="{{ producto.precio_venta }}"
+                                            data-stock="{{ producto.stock }}"
+                                            onclick="agregarAlCarrito(this)">
                                         <i class="bi bi-plus"></i>
                                     </button>
                                 </td>
@@ -145,7 +149,12 @@
 <script>
     let carrito = [];
 
-    function agregarAlCarrito(id, descripcion, precio, stock) {
+    function agregarAlCarrito(button) {
+        const id = button.getAttribute('data-id');
+        const descripcion = button.getAttribute('data-descripcion');
+        const precio = parseFloat(button.getAttribute('data-precio'));
+        const stock = parseInt(button.getAttribute('data-stock'));
+        
         const cantidad = prompt(`Cantidad (Stock: ${stock}):`, '1');
         
         if (cantidad && parseInt(cantidad) > 0 && parseInt(cantidad) <= stock) {
@@ -153,14 +162,21 @@
             const item = {
                 producto_id: id,
                 descripcion: descripcion,
-                precio: parseFloat(precio),
+                precio: precio,
                 cantidad: cant,
-                subtotal: parseFloat(precio) * cant
+                subtotal: precio * cant
             };
             
             carrito.push(item);
             actualizarCarrito();
-            showNotification('Producto agregado', 'success');
+            
+            // Mostrar notificación
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
+            alertDiv.style.zIndex = '9999';
+            alertDiv.innerHTML = 'Producto agregado <button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+            document.body.appendChild(alertDiv);
+            setTimeout(() => alertDiv.remove(), 3000);
         } else {
             alert('Cantidad inválida o stock insuficiente');
         }

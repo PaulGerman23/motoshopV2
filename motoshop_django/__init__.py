@@ -1,0 +1,1 @@
+# Este archivo puede estar vacío o contener configuración de inicialización
