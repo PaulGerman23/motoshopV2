@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+
+{% block title %}Nueva Venta - MotoShop{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-cart-plus"></i> Registrar Nueva Venta</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'lista_ventas' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Formulario de venta -->
+    <div class="col-md-7">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-search"></i> Seleccionar Productos</h5>
+            </div>
+            <div class="card-body">
+                <!-- Buscador de productos -->
+                <div class="mb-3">
+                    <label class="form-label">Buscar Producto</label>
+                    <input type="text" class="form-control" id="buscarProducto" placeholder="Buscar por código o descripción...">
+                </div>
+
+                <!-- Lista de productos -->
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover table-sm">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th>Código</th>
+                                <th>Descripción</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaProductos">
+                            {% for producto in productos %}
+                            <tr>
+                                <td>{{ producto.codigo }}</td>
+                                <td>{{ producto.descripcion|truncatewords:5 }}</td>
+                                <td>${{ producto.precio_venta }}</td>
+                                <td>
+                                    <span class="badge {% if producto.stock < 10 %}bg-danger{% else %}bg-success{% endif %}">
+                                        {{ producto.stock }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-primary" 
+                                            onclick="agregarAlCarrito({{ producto.id }}, '{{ producto.descripcion|escapejs }}', {{ producto.precio_venta }}, {{ producto.stock }})">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">No hay productos disponibles</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carrito de compra -->
+    <div class="col-md-5">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-cart-check"></i> Carrito de Venta</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="formVenta">
+                    {% csrf_token %}
+                    
+                    <!-- Información del cliente -->
+                    <div class="mb-3">
+                        <label for="cliente" class="form-label">Cliente</label>
+                        <select name="cliente" id="cliente" class="form-select">
+                            <option value="">Consumidor Final</option>
+                            {% for cliente in clientes %}
+                            <option value="{{ cliente.id }}">{{ cliente.nombre_completo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Tipo de pago -->
+                    <div class="mb-3">
+                        <label for="tipo_pago" class="form-label">Tipo de Pago *</label>
+                        <select name="tipo_pago" id="tipo_pago" class="form-select" required>
+                            <option value="efectivo">Efectivo</option>
+                            <option value="tarjeta">Tarjeta</option>
+                            <option value="transferencia">Transferencia</option>
+                            <option value="mercadopago">Mercado Pago</option>
+                        </select>
+                    </div>
+
+                    <!-- Observaciones -->
+                    <div class="mb-3">
+                        <label for="observacion" class="form-label">Observaciones</label>
+                        <textarea name="observacion" id="observacion" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <!-- Productos del carrito -->
+                    <div id="carritoContainer">
+                        <h6 class="border-bottom pb-2 mb-2">Productos:</h6>
+                        <div id="carritoItems" class="mb-3">
+                            <p class="text-muted text-center">El carrito está vacío</p>
+                        </div>
+                    </div>
+
+                    <!-- Total -->
+                    <div class="alert alert-info">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong>TOTAL:</strong>
+                            <h3 class="mb-0" id="totalVenta">$0.00</h3>
+                        </div>
+                    </div>
+
+                    <!-- Campo oculto para productos -->
+                    <input type="hidden" name="productos" id="productosJSON">
+
+                    <!-- Botones -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg" id="btnFinalizarVenta" disabled>
+                            <i class="bi bi-check-circle"></i> Finalizar Venta
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="limpiarCarrito()">
+                            <i class="bi bi-trash"></i> Limpiar Carrito
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let carrito = [];
+
+    function agregarAlCarrito(id, descripcion, precio, stock) {
+        const cantidad = prompt(`Cantidad (Stock: ${stock}):`, '1');
+        
+        if (cantidad && parseInt(cantidad) > 0 && parseInt(cantidad) <= stock) {
+            const cant = parseInt(cantidad);
+            const item = {
+                producto_id: id,
+                descripcion: descripcion,
+                precio: parseFloat(precio),
+                cantidad: cant,
+                subtotal: parseFloat(precio) * cant
+            };
+            
+            carrito.push(item);
+            actualizarCarrito();
+            showNotification('Producto agregado', 'success');
+        } else {
+            alert('Cantidad inválida o stock insuficiente');
+        }
+    }
+
+    function actualizarCarrito() {
+        const container = document.getElementById('carritoItems');
+        const totalEl = document.getElementById('totalVenta');
+        const btnFinalizar = document.getElementById('btnFinalizarVenta');
+        
+        if (carrito.length === 0) {
+            container.innerHTML = '<p class="text-muted text-center">El carrito está vacío</p>';
+            totalEl.textContent = '$0.00';
+            btnFinalizar.disabled = true;
+            return;
+        }
+        
+        let html = '';
+        let total = 0;
+        
+        carrito.forEach((item, index) => {
+            total += item.subtotal;
+            html += `
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                    <div class="flex-grow-1">
+                        <small class="text-muted">${item.descripcion}</small><br>
+                        <strong>${item.cantidad} x $${item.precio.toFixed(2)}</strong>
+                    </div>
+                    <div class="text-end">
+                        <strong class="text-success">$${item.subtotal.toFixed(2)}</strong><br>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="eliminarItem(${index})">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+        totalEl.textContent = `$${total.toFixed(2)}`;
+        btnFinalizar.disabled = false;
+        
+        // Actualizar JSON para enviar al backend
+        document.getElementById('productosJSON').value = JSON.stringify(carrito);
+    }
+
+    function eliminarItem(index) {
+        carrito.splice(index, 1);
+        actualizarCarrito();
+    }
+
+    function limpiarCarrito() {
+        if (confirm('¿Limpiar todo el carrito?')) {
+            carrito = [];
+            actualizarCarrito();
+        }
+    }
+
+    // Búsqueda de productos
+    document.getElementById('buscarProducto').addEventListener('input', function(e) {
+        const texto = e.target.value.toLowerCase();
+        const filas = document.querySelectorAll('#listaProductos tr');
+        
+        filas.forEach(fila => {
+            const contenido = fila.textContent.toLowerCase();
+            fila.style.display = contenido.includes(texto) ? '' : 'none';
+        });
+    });
+
+    // Validar formulario antes de enviar
+    document.getElementById('formVenta').addEventListener('submit', function(e) {
+        if (carrito.length === 0) {
+            e.preventDefault();
+            alert('Debe agregar al menos un producto al carrito');
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Productos - MotoShop{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-box-seam"></i> Gestión de Productos</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'crear_producto' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo Producto
+        </a>
+    </div>
+</div>
+
+<!-- Buscador y filtros -->
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" id="searchInput" placeholder="Buscar producto...">
+        </div>
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" id="filterCategoria">
+            <option value="">Todas las categorías</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" id="filterStock">
+            <option value="">Todo el stock</option>
+            <option value="bajo">Stock bajo (< 10)</option>
+            <option value="medio">Stock medio (10-50)</option>
+            <option value="alto">Stock alto (> 50)</option>
+        </select>
+    </div>
+</div>
+
+<!-- Tabla de productos -->
+<div class="card shadow">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped" id="tablaProductos">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                        <th>Categoría</th>
+                        <th>Proveedor</th>
+                        <th>Precio Costo</th>
+                        <th>Precio Venta</th>
+                        <th>Stock</th>
+                        <th>Margen %</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos %}
+                    <tr>
+                        <td><strong>{{ producto.codigo }}</strong></td>
+                        <td>{{ producto.descripcion|truncatewords:10 }}</td>
+                        <td>
+                            {% if producto.categoria %}
+                                <span class="badge bg-info">{{ producto.categoria.nombre }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Sin categoría</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if producto.proveedor %}
+                                {{ producto.proveedor.razon_social|truncatewords:3 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>${{ producto.precio_costo }}</td>
+                        <td><strong>${{ producto.precio_venta }}</strong></td>
+                        <td>
+                            {% if producto.stock < 10 %}
+                                <span class="badge bg-danger">{{ producto.stock }}</span>
+                            {% elif producto.stock < 50 %}
+                                <span class="badge bg-warning">{{ producto.stock }}</span>
+                            {% else %}
+                                <span class="badge bg-success">{{ producto.stock }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="text-success">{{ producto.margen_ganancia|floatformat:1 }}%</span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'editar_producto' producto.id %}" 
+                                   class="btn btn-sm btn-warning" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'eliminar_producto' producto.id %}" 
+                                   class="btn btn-sm btn-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted">
+                            <i class="bi bi-inbox fs-1"></i>
+                            <p>No hay productos registrados</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Resumen de inventario -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5>Total Productos</h5>
+                <h2>{{ productos|length }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5>Valor Total Stock</h5>
+                <h2>$XXX,XXX</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h5>Productos con Stock Bajo</h5>
+                <h2>X</h2>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Búsqueda en tiempo real
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        let filter = this.value.toUpperCase();
+        let table = document.getElementById('tablaProductos');
+        let tr = table.getElementsByTagName('tr');
+        
+        for (let i = 1; i < tr.length; i++) {
+            let td = tr[i].getElementsByTagName('td');
+            let display = false;
+            
+            for (let j = 0; j < td.length; j++) {
+                if (td[j]) {
+                    if (td[j].innerHTML.toUpperCase().indexOf(filter) > -1) {
+                        display = true;
+                        break;
+                    }
+                }
+            }
+            tr[i].style.display = display ? '' : 'none';
+        }
+    });
+</script>
+{% endblock %}
