@@ -1,0 +1,170 @@
+/*
+ * berry.css
+ *
+ * A lightweight set of overrides inspired by the Berry Vue admin theme.
+ * These styles customise Bootstrap components with a modern Material-like
+ * colour palette, update typography, and define behaviour for the
+ * collapsible sidebar.  Use this file alongside Bootstrap in your Django
+ * templates to elevate the default styling without rewriting your
+ * application logic.
+ */
+
+/* Root variables matching the Berry colour palette */
+:root {
+    --berry-primary: #4B49AC;     /* deep indigo primary tone */
+    --berry-primary-dark: #372885;
+    --berry-primary-light: #7267CB;
+    --berry-secondary: #50CD8D;   /* green accent for success badges */
+    --berry-danger: #E53935;      /* red for error states */
+    --berry-warning: #FFA726;
+    --berry-info: #29B6F6;
+    --berry-light: #F8F9FA;
+    --berry-dark: #212121;
+    --berry-text: #2F2F2F;
+    --berry-light: #F8F9FA;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--berry-light);
+    color: var(--berry-text);
+}
+
+/* Sidebar layout */
+#sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    transition: margin 0.25s ease-out;
+    background: var(--berry-primary);
+}
+
+#wrapper.toggled #sidebar {
+    margin-left: -250px;
+}
+
+#sidebar .sidebar-heading {
+    background: var(--berry-primary-dark);
+}
+
+#sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    transition: background 0.15s ease-in;
+}
+
+#sidebar .nav-link .material-icons {
+    font-size: 20px;
+}
+
+#sidebar .nav-link.active,
+#sidebar .nav-link:hover {
+    background-color: var(--berry-primary-dark);
+    color: #fff;
+}
+
+/* Topbar overrides */
+.navbar {
+    height: 56px;
+}
+
+.navbar .btn-link {
+    color: var(--berry-primary);
+    font-size: 24px;
+}
+
+.navbar .btn-link:hover {
+    color: var(--berry-primary-dark);
+    text-decoration: none;
+}
+
+.navbar .fw-semibold {
+    font-weight: 500;
+}
+
+/* Cards and widgets */
+.card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+}
+
+.card-header {
+    background-color: var(--berry-primary);
+    color: #fff;
+    border-bottom: none;
+    font-weight: 500;
+}
+
+.card-body {
+    background-color: #fff;
+}
+
+/* Navbar and sidebar customisation to follow Berry palette */
+.navbar {
+    background-color: var(--berry-primary) !important;
+    color: #fff;
+}
+
+.navbar .nav-link,
+.navbar .navbar-brand {
+    color: #fff !important;
+}
+
+.navbar .btn-link {
+    color: #fff;
+}
+
+.navbar .btn-link:hover {
+    color: var(--berry-primary-light);
+}
+
+#sidebar {
+    background-color: var(--berry-primary);
+}
+
+#sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.85);
+    border-left-color: transparent;
+}
+
+#sidebar .nav-link.active,
+#sidebar .nav-link:hover {
+    background-color: var(--berry-primary-dark);
+    border-left-color: var(--berry-primary-light);
+    color: #fff;
+}
+
+/* Table styling for inventory lists */
+table.table thead th {
+    background-color: var(--berry-primary);
+    color: #fff;
+    border-bottom: none;
+}
+
+table.table tbody tr:hover {
+    background-color: var(--berry-primary-light);
+    color: #fff;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--berry-primary);
+    border-color: var(--berry-primary);
+}
+
+.btn-primary:hover {
+    background-color: var(--berry-primary-dark);
+    border-color: var(--berry-primary-dark);
+}
+
+.btn-success {
+    background-color: var(--berry-secondary);
+    border-color: var(--berry-secondary);
+}
+
+.btn-danger {
+    background-color: var(--berry-danger);
+    border-color: var(--berry-danger);
+}

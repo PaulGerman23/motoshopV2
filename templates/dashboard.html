@@ -4,162 +4,314 @@
 {% block title %}Dashboard - MotoShop{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Dashboard</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-calendar3"></i> Hoy
-            </button>
-        </div>
-    </div>
+<!-- Page Header -->
+<div class="page-header mb-4">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Bienvenido de vuelta, {{ user.first_name }}! Aquí está el resumen de tu negocio.</p>
 </div>
 
-<!-- Tarjetas de métricas -->
-<div class="row mb-4">
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                            Ventas del Día
-                        </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">$12,350</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-currency-dollar fs-2 text-gray-300"></i>
-                    </div>
-                </div>
+<!-- Stats Cards Row -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="stats-card" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+            <div class="stats-icon">
+                <i class="bi bi-currency-dollar"></i>
+            </div>
+            <div class="stats-title">Ventas del Mes</div>
+            <div class="stats-value">$45,350</div>
+            <div class="stats-trend">
+                <i class="bi bi-arrow-up"></i> 12.5% vs mes anterior
             </div>
         </div>
     </div>
 
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Productos en Stock
-                        </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">248</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-box-seam fs-2 text-gray-300"></i>
-                    </div>
-                </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stats-card" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+            <div class="stats-icon">
+                <i class="bi bi-cart-check"></i>
+            </div>
+            <div class="stats-title">Total Ventas</div>
+            <div class="stats-value">342</div>
+            <div class="stats-trend">
+                <i class="bi bi-arrow-up"></i> 8.2% este mes
             </div>
         </div>
     </div>
 
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                            Clientes Activos
-                        </div>
-                        <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">87</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-people fs-2 text-gray-300"></i>
-                    </div>
-                </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stats-card" style="background: linear-gradient(135deg, #10b981, #059669);">
+            <div class="stats-icon">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <div class="stats-title">Productos en Stock</div>
+            <div class="stats-value">248</div>
+            <div class="stats-trend">
+                <i class="bi bi-dash"></i> Sin cambios
             </div>
         </div>
     </div>
 
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            Stock Bajo
-                        </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">12</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-exclamation-triangle fs-2 text-gray-300"></i>
-                    </div>
-                </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stats-card" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+            <div class="stats-icon">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div class="stats-title">Stock Bajo</div>
+            <div class="stats-value">12</div>
+            <div class="stats-trend">
+                <i class="bi bi-arrow-down"></i> Requiere atención
             </div>
         </div>
     </div>
 </div>
 
-<!-- Gráficos y tablas -->
-<div class="row">
-    <div class="col-lg-8 mb-4">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Ventas Mensuales</h6>
+<!-- Main Content Row -->
+<div class="row g-4">
+    <!-- Sales Chart -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1">Ventas Mensuales</h5>
+                    <p class="text-muted mb-0" style="font-size: 13px;">Resumen de ventas de los últimos 12 meses</p>
+                </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-primary active">Mes</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary">Año</button>
+                </div>
             </div>
             <div class="card-body">
-                <canvas id="ventasChart"></canvas>
+                <canvas id="salesChart" height="80"></canvas>
             </div>
         </div>
     </div>
 
-    <div class="col-lg-4 mb-4">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Productos Más Vendidos</h6>
-            </div>
+    <!-- Top Products & Quick Stats -->
+    <div class="col-lg-4">
+        <!-- Income Card -->
+        <div class="card mb-4" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
             <div class="card-body">
-                <ul class="list-group">
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Filtro de Aceite
-                        <span class="badge bg-primary rounded-pill">45</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Pastillas de Freno
-                        <span class="badge bg-primary rounded-pill">38</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Cadena de Transmisión
-                        <span class="badge bg-primary rounded-pill">32</span>
-                    </li>
-                </ul>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <p class="mb-1" style="opacity: 0.9;">Total Ingresos</p>
+                        <h2 class="mb-0">$203,450</h2>
+                    </div>
+                    <div class="stats-icon" style="width: 50px; height: 50px;">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                </div>
+                <div class="progress" style="height: 6px; background: rgba(255,255,255,0.2);">
+                    <div class="progress-bar" style="width: 75%; background: rgba(255,255,255,0.8);"></div>
+                </div>
+                <p class="mt-2 mb-0" style="opacity: 0.9; font-size: 13px;">
+                    <i class="bi bi-arrow-up"></i> 15% más que el mes pasado
+                </p>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Accesos rápidos -->
-<div class="row">
-    <div class="col-12">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Accesos Rápidos</h6>
+        <!-- Top Products -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Productos Más Vendidos</h5>
             </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-3 mb-3">
-                        <a href="{% url 'crear_venta' %}" class="btn btn-primary btn-lg w-100">
-                            <i class="bi bi-plus-circle"></i><br>Nueva Venta
-                        </a>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="product-icon me-3">
+                                <i class="bi bi-circle-fill text-primary"></i>
+                            </div>
+                            <div>
+                                <div class="fw-semibold">Filtro de Aceite</div>
+                                <small class="text-muted">45 unidades</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">$1,839</span>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <a href="{% url 'crear_producto' %}" class="btn btn-success btn-lg w-100">
-                            <i class="bi bi-box"></i><br>Nuevo Producto
-                        </a>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="product-icon me-3">
+                                <i class="bi bi-circle-fill text-info"></i>
+                            </div>
+                            <div>
+                                <div class="fw-semibold">Pastillas de Freno</div>
+                                <small class="text-muted">38 unidades</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-info rounded-pill">$1,456</span>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <a href="{% url 'crear_cliente' %}" class="btn btn-info btn-lg w-100">
-                            <i class="bi bi-person-plus"></i><br>Nuevo Cliente
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <a href="{% url 'lista_productos' %}" class="btn btn-warning btn-lg w-100">
-                            <i class="bi bi-search"></i><br>Ver Inventario
-                        </a>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="product-icon me-3">
+                                <i class="bi bi-circle-fill text-success"></i>
+                            </div>
+                            <div>
+                                <div class="fw-semibold">Cadena Transmisión</div>
+                                <small class="text-muted">32 unidades</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-success rounded-pill">$986</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Recent Activity & Quick Actions -->
+<div class="row g-4 mt-2">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Actividad Reciente</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>ID Venta</th>
+                                <th>Cliente</th>
+                                <th>Productos</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>#1024</strong></td>
+                                <td>Juan Pérez</td>
+                                <td>3 items</td>
+                                <td><strong>$2,450</strong></td>
+                                <td><span class="badge-modern bg-success text-white">Pagado</span></td>
+                                <td>Hace 2 horas</td>
+                            </tr>
+                            <tr>
+                                <td><strong>#1023</strong></td>
+                                <td>María García</td>
+                                <td>1 item</td>
+                                <td><strong>$850</strong></td>
+                                <td><span class="badge-modern bg-success text-white">Pagado</span></td>
+                                <td>Hace 4 horas</td>
+                            </tr>
+                            <tr>
+                                <td><strong>#1022</strong></td>
+                                <td>Carlos Rodríguez</td>
+                                <td>5 items</td>
+                                <td><strong>$4,200</strong></td>
+                                <td><span class="badge-modern bg-warning text-dark">Pendiente</span></td>
+                                <td>Hace 6 horas</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Acciones Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-3">
+                    <a href="{% url 'crear_venta' %}" class="btn btn-primary-modern btn-modern">
+                        <i class="bi bi-plus-circle"></i>
+                        Nueva Venta
+                    </a>
+                    <a href="{% url 'crear_producto' %}" class="btn btn-modern" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
+                        <i class="bi bi-box"></i>
+                        Agregar Producto
+                    </a>
+                    <a href="{% url 'crear_cliente' %}" class="btn btn-modern" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;">
+                        <i class="bi bi-person-plus"></i>
+                        Nuevo Cliente
+                    </a>
+                    <a href="{% url 'lista_productos' %}" class="btn btn-modern" style="background: #f3f4f6; color: #374151;">
+                        <i class="bi bi-search"></i>
+                        Ver Inventario
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Sales Chart
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(102, 126, 234, 0.3)');
+    gradient.addColorStop(1, 'rgba(102, 126, 234, 0)');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+            datasets: [{
+                label: 'Ventas',
+                data: [12000, 19000, 15000, 25000, 22000, 30000, 28000, 35000, 32000, 38000, 42000, 45000],
+                backgroundColor: gradient,
+                borderColor: '#667eea',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 0,
+                pointHoverRadius: 6,
+                pointHoverBackgroundColor: '#667eea',
+                pointHoverBorderColor: '#fff',
+                pointHoverBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    borderRadius: 8,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return '$' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    border: {
+                        display: false
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    border: {
+                        display: false
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}
