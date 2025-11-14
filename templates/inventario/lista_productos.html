@@ -3,107 +3,234 @@
 {% block title %}Productos - MotoShop{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="bi bi-box-seam"></i> Gestión de Productos</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="{% url 'crear_producto' %}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nuevo Producto
+<!-- Page Header -->
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Gestión de Productos</h1>
+            <p class="page-subtitle">Administra el inventario de repuestos</p>
+        </div>
+        <a href="{% url 'crear_producto' %}" class="btn btn-primary-modern btn-modern">
+            <i class="bi bi-plus-circle"></i>
+            Nuevo Producto
         </a>
     </div>
 </div>
 
-<!-- Buscador y filtros -->
-<div class="row mb-3">
-    <div class="col-md-6">
-        <div class="input-group">
-            <span class="input-group-text"><i class="bi bi-search"></i></span>
-            <input type="text" class="form-control" id="searchInput" placeholder="Buscar producto...">
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="mini-stats-card" style="border-left: 4px solid #667eea;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="stats-label">Total Productos</p>
+                    <h3 class="stats-number">{{ productos|length }}</h3>
+                </div>
+                <div class="stats-icon-mini" style="background: rgba(102, 126, 234, 0.1); color: #667eea;">
+                    <i class="bi bi-box"></i>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <select class="form-select" id="filterCategoria">
-            <option value="">Todas las categorías</option>
-        </select>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="mini-stats-card" style="border-left: 4px solid #10b981;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="stats-label">Valor Total Stock</p>
+                    <h3 class="stats-number">$XXX,XXX</h3>
+                </div>
+                <div class="stats-icon-mini" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="col-md-3">
-        <select class="form-select" id="filterStock">
-            <option value="">Todo el stock</option>
-            <option value="bajo">Stock bajo (< 10)</option>
-            <option value="medio">Stock medio (10-50)</option>
-            <option value="alto">Stock alto (> 50)</option>
-        </select>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="mini-stats-card" style="border-left: 4px solid #f59e0b;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="stats-label">Stock Bajo</p>
+                    <h3 class="stats-number text-warning">X</h3>
+                </div>
+                <div class="stats-icon-mini" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="mini-stats-card" style="border-left: 4px solid #3b82f6;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="stats-label">Categorías</p>
+                    <h3 class="stats-number">XX</h3>
+                </div>
+                <div class="stats-icon-mini" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                    <i class="bi bi-tags"></i>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Tabla de productos -->
-<div class="card shadow">
+<!-- Filters Card -->
+<div class="card mb-4">
     <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="search-box-modern">
+                    <i class="bi bi-search"></i>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Buscar producto...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="filterCategoria">
+                    <option value="">Todas las categorías</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="filterStock">
+                    <option value="">Todo el stock</option>
+                    <option value="bajo">Stock bajo (< 10)</option>
+                    <option value="medio">Stock medio (10-50)</option>
+                    <option value="alto">Stock alto (> 50)</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-modern w-100" style="background: #f3f4f6; color: #374151;">
+                    <i class="bi bi-funnel"></i>
+                    Filtrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Products Table Card -->
+<div class="card">
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover table-striped" id="tablaProductos">
-                <thead class="table-dark">
+            <table class="modern-table" id="tablaProductos">
+                <thead>
                     <tr>
-                        <th>Código</th>
-                        <th>Descripción</th>
-                        <th>Categoría</th>
-                        <th>Proveedor</th>
-                        <th>Precio Costo</th>
-                        <th>Precio Venta</th>
-                        <th>Stock</th>
-                        <th>Margen %</th>
-                        <th>Acciones</th>
+                        <th>
+                            <input type="checkbox" class="form-check-input">
+                        </th>
+                        <th>CÓDIGO</th>
+                        <th>PRODUCTO</th>
+                        <th>CATEGORÍA</th>
+                        <th>PROVEEDOR</th>
+                        <th>PRECIO COSTO</th>
+                        <th>PRECIO VENTA</th>
+                        <th>STOCK</th>
+                        <th>MARGEN</th>
+                        <th>ESTADO</th>
+                        <th>ACCIONES</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for producto in productos %}
-                    <tr>
-                        <td><strong>{{ producto.codigo }}</strong></td>
-                        <td>{{ producto.descripcion|truncatewords:10 }}</td>
+                    <tr data-producto-id="{{ producto.id }}">
+                        <td>
+                            <input type="checkbox" class="form-check-input">
+                        </td>
+                        <td>
+                            <span class="code-badge">#{{ producto.codigo }}</span>
+                        </td>
+                        <td>
+                            <div class="product-info">
+                                <div class="product-avatar">
+                                    <i class="bi bi-box-seam"></i>
+                                </div>
+                                <div>
+                                    <div class="product-name">{{ producto.descripcion|truncatewords:10 }}</div>
+                                    <small class="text-muted">SKU: {{ producto.codigo }}</small>
+                                </div>
+                            </div>
+                        </td>
                         <td>
                             {% if producto.categoria %}
-                                <span class="badge bg-info">{{ producto.categoria.nombre }}</span>
+                                <span class="badge-modern" style="background: rgba(102, 126, 234, 0.1); color: #667eea;">
+                                    {{ producto.categoria.nombre }}
+                                </span>
                             {% else %}
-                                <span class="badge bg-secondary">Sin categoría</span>
+                                <span class="badge-modern" style="background: #f3f4f6; color: #6b7280;">
+                                    Sin categoría
+                                </span>
                             {% endif %}
                         </td>
                         <td>
                             {% if producto.proveedor %}
-                                {{ producto.proveedor.razon_social|truncatewords:3 }}
+                                <small>{{ producto.proveedor.razon_social|truncatewords:3 }}</small>
                             {% else %}
-                                -
+                                <small class="text-muted">-</small>
                             {% endif %}
                         </td>
-                        <td>${{ producto.precio_costo }}</td>
-                        <td><strong>${{ producto.precio_venta }}</strong></td>
+                        <td>
+                            <span class="price-text">${{ producto.precio_costo }}</span>
+                        </td>
+                        <td>
+                            <strong class="price-text-strong">${{ producto.precio_venta }}</strong>
+                        </td>
                         <td>
                             {% if producto.stock < 10 %}
-                                <span class="badge bg-danger">{{ producto.stock }}</span>
+                                <span class="stock-badge stock-low">
+                                    <i class="bi bi-exclamation-circle"></i>
+                                    {{ producto.stock }}
+                                </span>
                             {% elif producto.stock < 50 %}
-                                <span class="badge bg-warning">{{ producto.stock }}</span>
+                                <span class="stock-badge stock-medium">
+                                    <i class="bi bi-dash-circle"></i>
+                                    {{ producto.stock }}
+                                </span>
                             {% else %}
-                                <span class="badge bg-success">{{ producto.stock }}</span>
+                                <span class="stock-badge stock-high">
+                                    <i class="bi bi-check-circle"></i>
+                                    {{ producto.stock }}
+                                </span>
                             {% endif %}
                         </td>
                         <td>
-                            <span class="text-success">{{ producto.margen_ganancia|floatformat:1 }}%</span>
+                            <span class="margin-badge">
+                                <i class="bi bi-graph-up-arrow"></i>
+                                {{ producto.margen_ganancia|floatformat:1 }}%
+                            </span>
                         </td>
                         <td>
-                            <div class="btn-group" role="group">
-                                <a href="{% url 'editar_producto' producto.id %}" 
-                                   class="btn btn-sm btn-warning" title="Editar">
+                            {% if producto.estado == 1 %}
+                                <span class="status-badge status-active">Activo</span>
+                            {% else %}
+                                <span class="status-badge status-inactive">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-action btn-action-view" data-bs-toggle="modal" data-bs-target="#modalProducto" onclick="verDetalleProducto({{ producto.id }})">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <a href="{% url 'editar_producto' producto.id %}" class="btn-action btn-action-edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <a href="{% url 'eliminar_producto' producto.id %}" 
-                                   class="btn btn-sm btn-danger" title="Eliminar">
+                                <button class="btn-action btn-action-delete" onclick="confirmarEliminar({{ producto.id }})">
                                     <i class="bi bi-trash"></i>
-                                </a>
+                                </button>
                             </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="9" class="text-center text-muted">
-                            <i class="bi bi-inbox fs-1"></i>
-                            <p>No hay productos registrados</p>
+                        <td colspan="11" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <p>No hay productos registrados</p>
+                                <a href="{% url 'crear_producto' %}" class="btn btn-primary-modern btn-modern mt-3">
+                                    <i class="bi bi-plus-circle"></i>
+                                    Crear Primer Producto
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -113,57 +240,414 @@
     </div>
 </div>
 
-<!-- Resumen de inventario -->
-<div class="row mt-4">
-    <div class="col-md-4">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <h5>Total Productos</h5>
-                <h2>{{ productos|length }}</h2>
+<!-- Modal Detalle Producto -->
+<div class="modal fade" id="modalProducto" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Detalle del Producto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalProductoBody">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <h5>Valor Total Stock</h5>
-                <h2>$XXX,XXX</h2>
+</div>
+
+<!-- Modal Confirmar Eliminación -->
+<div class="modal fade" id="modalEliminar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card bg-warning text-white">
-            <div class="card-body">
-                <h5>Productos con Stock Bajo</h5>
-                <h2>X</h2>
+            <div class="modal-body text-center py-4">
+                <div class="delete-icon mb-3">
+                    <i class="bi bi-trash"></i>
+                </div>
+                <h6>¿Estás seguro de eliminar este producto?</h6>
+                <p class="text-muted mb-0">Esta acción no se puede deshacer</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="formEliminar" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar Producto</button>
+                </form>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+.mini-stats-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-left: 4px solid;
+}
+
+.stats-label {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 8px;
+}
+
+.stats-number {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.stats-icon-mini {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.search-box-modern {
+    position: relative;
+}
+
+.search-box-modern i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+}
+
+.search-box-modern input {
+    padding-left: 45px;
+}
+
+.code-badge {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.product-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.product-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+}
+
+.product-name {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.price-text {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.price-text-strong {
+    color: #1f2937;
+    font-size: 15px;
+}
+
+.stock-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.stock-low {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.stock-medium {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.stock-high {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.margin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #10b981;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-active {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.status-inactive {
+    background: rgba(107, 114, 128, 0.1);
+    color: #6b7280;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-action {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 16px;
+}
+
+.btn-action-view {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.btn-action-view:hover {
+    background: #3b82f6;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-action-edit {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.btn-action-edit:hover {
+    background: #f59e0b;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-action-delete {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.btn-action-delete:hover {
+    background: #ef4444;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.empty-state {
+    padding: 40px;
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: #d1d5db;
+    margin-bottom: 16px;
+}
+
+.empty-state p {
+    color: #6b7280;
+    margin: 0;
+}
+
+.modern-modal .modal-content {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.modern-modal .modal-header {
+    padding: 24px;
+}
+
+.modern-modal .modal-body {
+    padding: 24px;
+}
+
+.delete-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 36px;
+    color: #ef4444;
+}
+</style>
+{% endblock %}
+
 {% block extra_js %}
 <script>
-    // Búsqueda en tiempo real
-    document.getElementById('searchInput').addEventListener('keyup', function() {
-        let filter = this.value.toUpperCase();
-        let table = document.getElementById('tablaProductos');
-        let tr = table.getElementsByTagName('tr');
+// Búsqueda en tiempo real
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    let filter = this.value.toUpperCase();
+    let table = document.getElementById('tablaProductos');
+    let tr = table.getElementsByTagName('tr');
+    
+    for (let i = 1; i < tr.length; i++) {
+        let td = tr[i].getElementsByTagName('td');
+        let display = false;
         
-        for (let i = 1; i < tr.length; i++) {
-            let td = tr[i].getElementsByTagName('td');
-            let display = false;
-            
-            for (let j = 0; j < td.length; j++) {
-                if (td[j]) {
-                    if (td[j].innerHTML.toUpperCase().indexOf(filter) > -1) {
-                        display = true;
-                        break;
-                    }
+        for (let j = 0; j < td.length; j++) {
+            if (td[j]) {
+                if (td[j].innerHTML.toUpperCase().indexOf(filter) > -1) {
+                    display = true;
+                    break;
                 }
             }
-            tr[i].style.display = display ? '' : 'none';
         }
-    });
+        tr[i].style.display = display ? '' : 'none';
+    }
+});
+
+// Ver detalle del producto
+function verDetalleProducto(id) {
+    const modalBody = document.getElementById('modalProductoBody');
+    
+    // Simular carga de datos (en producción, usar AJAX)
+    setTimeout(() => {
+        const row = document.querySelector(`tr[data-producto-id="${id}"]`);
+        const productName = row.querySelector('.product-name').textContent;
+        const code = row.querySelector('.code-badge').textContent;
+        const stock = row.querySelector('.stock-badge').textContent.trim();
+        const precioCosto = row.querySelectorAll('.price-text')[0].textContent;
+        const precioVenta = row.querySelector('.price-text-strong').textContent;
+        
+        modalBody.innerHTML = `
+            <div class="row g-4">
+                <div class="col-md-4 text-center">
+                    <div class="product-image-large">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <div class="mt-3">
+                        ${row.querySelector('.status-badge').outerHTML}
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <h4>${productName}</h4>
+                    <p class="text-muted">Código: ${code}</p>
+                    
+                    <div class="detail-grid mt-4">
+                        <div class="detail-item">
+                            <label>Precio Costo</label>
+                            <div class="detail-value">${precioCosto}</div>
+                        </div>
+                        <div class="detail-item">
+                            <label>Precio Venta</label>
+                            <div class="detail-value">${precioVenta}</div>
+                        </div>
+                        <div class="detail-item">
+                            <label>Stock Disponible</label>
+                            <div class="detail-value">${stock}</div>
+                        </div>
+                        <div class="detail-item">
+                            <label>Categoría</label>
+                            <div class="detail-value">${row.querySelectorAll('.badge-modern')[0]?.textContent || 'N/A'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 d-flex gap-2">
+                        <a href="/inventario/productos/editar/${id}/" class="btn btn-primary-modern btn-modern">
+                            <i class="bi bi-pencil"></i>
+                            Editar
+                        </a>
+                        <button class="btn btn-modern" style="background: #f3f4f6; color: #374151;" onclick="confirmarEliminar(${id})" data-bs-dismiss="modal">
+                            <i class="bi bi-trash"></i>
+                            Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }, 300);
+}
+
+// Confirmar eliminación
+function confirmarEliminar(id) {
+    const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+    const form = document.getElementById('formEliminar');
+    form.action = `/inventario/productos/eliminar/${id}/`;
+    modal.show();
+}
 </script>
+
+<style>
+.product-image-large {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    color: white;
+    margin: 0 auto;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.detail-item label {
+    font-size: 13px;
+    color: #6b7280;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.detail-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+}
+</style>
 {% endblock %}

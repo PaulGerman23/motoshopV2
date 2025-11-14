@@ -3,48 +3,217 @@
 {% block title %}Clientes - MotoShop{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="bi bi-people"></i> Gestión de Clientes</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="{% url 'crear_cliente' %}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nuevo Cliente
+<!-- Page Header -->
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Gestión de Clientes</h1>
+            <p class="page-subtitle">Administra tu base de datos de clientes</p>
+        </div>
+        <a href="{% url 'crear_cliente' %}" class="btn btn-primary-modern btn-modern">
+            <i class="bi bi-person-plus"></i>
+            Nuevo Cliente
         </a>
     </div>
 </div>
 
-<div class="card shadow">
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="mini-stats-card" style="border-left: 4px solid #667eea;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="stats-label">Total Clientes</p>
+                    <h3 class="stats-number">{{ clientes|length }}</h3>
+                </div>
+                <div class="stats-icon-mini" style="background: rgba(102, 126, 234, 0.1); color: #667eea;">
+                    <i class="bi bi-people"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="mini-stats-card" style="border-left: 4px solid #10b981;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="stats-label">Clientes Activos</p>
+                    <h3 class="stats-number">{{ clientes|length }}</h3>
+                </div>
+                <div class="stats-icon-mini" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                    <i class="bi bi-person-check"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="mini-stats-card" style="border-left: 4px solid #3b82f6;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="stats-label">Nuevos Este Mes</p>
+                    <h3 class="stats-number">12</h3>
+                </div>
+                <div class="stats-icon-mini" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                    <i class="bi bi-person-plus-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="mini-stats-card" style="border-left: 4px solid #f59e0b;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="stats-label">Clientes Premium</p>
+                    <h3 class="stats-number">8</h3>
+                </div>
+                <div class="stats-icon-mini" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                    <i class="bi bi-star-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters Card -->
+<div class="card mb-4">
     <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="search-box-modern">
+                    <i class="bi bi-search"></i>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Buscar cliente por nombre, DNI o CUIT...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="filterIVA">
+                    <option value="">Todas las condiciones IVA</option>
+                    <option value="Responsable Inscripto">Responsable Inscripto</option>
+                    <option value="Monotributista">Monotributista</option>
+                    <option value="Exento">Exento</option>
+                    <option value="Consumidor Final">Consumidor Final</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-modern w-100" style="background: #f3f4f6; color: #374151;">
+                    <i class="bi bi-download"></i>
+                    Exportar CSV
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Clients Table Card -->
+<div class="card">
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover table-striped">
-                <thead class="table-dark">
+            <table class="modern-table" id="tablaClientes">
+                <thead>
                     <tr>
-                        <th>Código</th>
-                        <th>Nombre</th>
+                        <th>
+                            <input type="checkbox" class="form-check-input">
+                        </th>
+                        <th>CLIENTE</th>
+                        <th>CÓDIGO</th>
                         <th>DNI/CUIT</th>
-                        <th>Teléfono</th>
-                        <th>Email</th>
-                        <th>Condición IVA</th>
-                        <th>Acciones</th>
+                        <th>CONTACTO</th>
+                        <th>CONDICIÓN IVA</th>
+                        <th>ESTADO</th>
+                        <th>ACCIONES</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for cliente in clientes %}
-                    <tr>
-                        <td><strong>{{ cliente.codigo_cliente }}</strong></td>
-                        <td>{{ cliente.nombre_completo }}</td>
-                        <td>{{ cliente.dni|default:cliente.cuit|default:"-" }}</td>
-                        <td>{{ cliente.telefono|default:"-" }}</td>
-                        <td>{{ cliente.email|default:"-" }}</td>
-                        <td><span class="badge bg-info">{{ cliente.condicion_iva }}</span></td>
+                    <tr data-cliente-id="{{ cliente.id }}">
                         <td>
-                            <a href="{% url 'editar_cliente' cliente.id %}" class="btn btn-sm btn-warning">
-                                <i class="bi bi-pencil"></i>
-                            </a>
+                            <input type="checkbox" class="form-check-input">
+                        </td>
+                        <td>
+                            <div class="client-info">
+                                <div class="client-avatar">
+                                    {{ cliente.nombre.0 }}{{ cliente.apellido.0 }}
+                                </div>
+                                <div>
+                                    <div class="client-name">{{ cliente.nombre_completo }}</div>
+                                    <small class="text-muted">Cliente desde 2024</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="code-badge">#{{ cliente.codigo_cliente }}</span>
+                        </td>
+                        <td>
+                            <div>
+                                {% if cliente.dni %}
+                                    <div><strong>DNI:</strong> {{ cliente.dni }}</div>
+                                {% endif %}
+                                {% if cliente.cuit %}
+                                    <div><strong>CUIT:</strong> {{ cliente.cuit }}</div>
+                                {% endif %}
+                                {% if not cliente.dni and not cliente.cuit %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="contact-info">
+                                {% if cliente.telefono %}
+                                    <div class="contact-item">
+                                        <i class="bi bi-telephone"></i>
+                                        <span>{{ cliente.telefono }}</span>
+                                    </div>
+                                {% endif %}
+                                {% if cliente.email %}
+                                    <div class="contact-item">
+                                        <i class="bi bi-envelope"></i>
+                                        <span>{{ cliente.email }}</span>
+                                    </div>
+                                {% endif %}
+                                {% if not cliente.telefono and not cliente.email %}
+                                    <span class="text-muted">Sin contacto</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="iva-badge iva-{{ cliente.condicion_iva|slugify }}">
+                                {{ cliente.condicion_iva }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if cliente.estado == 1 %}
+                                <span class="status-badge status-active">Activo</span>
+                            {% else %}
+                                <span class="status-badge status-inactive">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-action btn-action-view" data-bs-toggle="modal" data-bs-target="#modalCliente" onclick="verDetalleCliente({{ cliente.id }})">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <a href="{% url 'editar_cliente' cliente.id %}" class="btn-action btn-action-edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button class="btn-action btn-action-message">
+                                    <i class="bi bi-chat-dots"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center text-muted">No hay clientes registrados</td>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="bi bi-people"></i>
+                                <p>No hay clientes registrados</p>
+                                <a href="{% url 'crear_cliente' %}" class="btn btn-primary-modern btn-modern mt-3">
+                                    <i class="bi bi-person-plus"></i>
+                                    Crear Primer Cliente
+                                </a>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -52,4 +221,281 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Detalle Cliente -->
+<div class="modal fade" id="modalCliente" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Detalle del Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalClienteBody">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.client-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.client-avatar {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.client-name {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 14px;
+}
+
+.contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.contact-item i {
+    font-size: 14px;
+    color: #9ca3af;
+}
+
+.iva-badge {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.iva-responsable-inscripto {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.iva-monotributista {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.iva-exento {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.iva-consumidor-final {
+    background: rgba(107, 114, 128, 0.1);
+    color: #6b7280;
+}
+
+.btn-action-message {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.btn-action-message:hover {
+    background: #10b981;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.client-detail-header {
+    text-align: center;
+    padding: 30px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 12px;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.client-avatar-large {
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: 700;
+    margin: 0 auto 15px;
+}
+
+.detail-section {
+    margin-bottom: 25px;
+}
+
+.detail-section h6 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-row {
+    display: flex;
+    padding: 12px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    flex: 0 0 140px;
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.detail-value {
+    flex: 1;
+    font-size: 14px;
+    color: #1f2937;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Búsqueda en tiempo real
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    let filter = this.value.toUpperCase();
+    let table = document.getElementById('tablaClientes');
+    let tr = table.getElementsByTagName('tr');
+    
+    for (let i = 1; i < tr.length; i++) {
+        let td = tr[i].getElementsByTagName('td');
+        let display = false;
+        
+        for (let j = 0; j < td.length; j++) {
+            if (td[j]) {
+                if (td[j].innerHTML.toUpperCase().indexOf(filter) > -1) {
+                    display = true;
+                    break;
+                }
+            }
+        }
+        tr[i].style.display = display ? '' : 'none';
+    }
+});
+
+// Ver detalle del cliente
+function verDetalleCliente(id) {
+    const modalBody = document.getElementById('modalClienteBody');
+    
+    setTimeout(() => {
+        const row = document.querySelector(`tr[data-cliente-id="${id}"]`);
+        const clientName = row.querySelector('.client-name').textContent;
+        const code = row.querySelector('.code-badge').textContent;
+        const avatarText = row.querySelector('.client-avatar').textContent;
+        
+        modalBody.innerHTML = `
+            <div class="client-detail-header">
+                <div class="client-avatar-large">${avatarText}</div>
+                <h4 class="mb-1">${clientName}</h4>
+                <p class="mb-0 opacity-75">${code}</p>
+            </div>
+            
+            <div class="detail-section">
+                <h6>Información Personal</h6>
+                <div class="detail-row">
+                    <div class="detail-label">DNI:</div>
+                    <div class="detail-value">XX.XXX.XXX</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">CUIT:</div>
+                    <div class="detail-value">XX-XXXXXXXX-X</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Condición IVA:</div>
+                    <div class="detail-value">Responsable Inscripto</div>
+                </div>
+            </div>
+            
+            <div class="detail-section">
+                <h6>Información de Contacto</h6>
+                <div class="detail-row">
+                    <div class="detail-label">Teléfono:</div>
+                    <div class="detail-value">(+54) XXX-XXXXXXX</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Email:</div>
+                    <div class="detail-value">cliente@ejemplo.com</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Dirección:</div>
+                    <div class="detail-value">Calle Ejemplo 123, Ciudad</div>
+                </div>
+            </div>
+            
+            <div class="detail-section">
+                <h6>Estadísticas</h6>
+                <div class="row g-3">
+                    <div class="col-4 text-center">
+                        <div class="stat-box">
+                            <h3 class="text-primary mb-0">15</h3>
+                            <small class="text-muted">Compras</small>
+                        </div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="stat-box">
+                            <h3 class="text-success mb-0">$45,230</h3>
+                            <small class="text-muted">Total</small>
+                        </div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="stat-box">
+                            <h3 class="text-info mb-0">$3,015</h3>
+                            <small class="text-muted">Promedio</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 d-flex gap-2">
+                <a href="/clientes/editar/${id}/" class="btn btn-primary-modern btn-modern flex-fill">
+                    <i class="bi bi-pencil"></i>
+                    Editar Cliente
+                </a>
+                <button class="btn btn-modern flex-fill" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
+                    <i class="bi bi-cart-plus"></i>
+                    Nueva Venta
+                </button>
+            </div>
+        `;
+    }, 300);
+}
+</script>
 {% endblock %}

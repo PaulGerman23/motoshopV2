@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Producto - MotoShop{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-5 text-center">
+                <div class="delete-icon-large mb-4">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                
+                <h3 class="mb-3">¿Eliminar este producto?</h3>
+                <p class="text-muted mb-4">
+                    Estás a punto de eliminar el producto:<br>
+                    <strong class="text-dark">{{ producto.descripcion }}</strong><br>
+                    <span class="code-badge mt-2 d-inline-block">#{{ producto.codigo }}</span>
+                </p>
+
+                <div class="alert alert-warning d-flex align-items-start text-start">
+                    <i class="bi bi-exclamation-circle me-2 mt-1"></i>
+                    <div>
+                        <strong>Advertencia:</strong><br>
+                        Esta acción cambiará el estado del producto a inactivo. 
+                        No se eliminará permanentemente de la base de datos.
+                    </div>
+                </div>
+
+                <div class="product-detail-box mb-4">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <small class="text-muted d-block">Stock Actual</small>
+                            <strong>{{ producto.stock }} unidades</strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Precio Venta</small>
+                            <strong>${{ producto.precio_venta }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post" class="d-flex gap-3">
+                    {% csrf_token %}
+                    <a href="{% url 'lista_productos' %}" class="btn btn-modern flex-fill" style="background: #f3f4f6; color: #374151;">
+                        <i class="bi bi-arrow-left"></i>
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-danger flex-fill">
+                        <i class="bi bi-trash"></i>
+                        Confirmar Eliminación
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.delete-icon-large {
+    width: 100px;
+    height: 100px;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 48px;
+    color: #ef4444;
+}
+
+.product-detail-box {
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 20px;
+}
+</style>
+{% endblock %}
