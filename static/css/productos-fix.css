@@ -1,0 +1,45 @@
+/* ==============================================
+   FIX: Tabla de productos visible desde el inicio
+   ============================================== */
+
+/* Asegurar que el contenedor de la tabla sea visible */
+.table-responsive {
+    overflow-x: auto;
+    overflow-y: visible !important;
+    max-height: none !important;
+    min-height: auto;
+}
+
+/* Tabla de productos en lista */
+#tablaProductos {
+    width: 100%;
+    table-layout: fixed;
+}
+
+/* Asegurar que el card contenedor no tenga restricciones de altura */
+.card .table-responsive {
+    height: auto;
+}
+
+/* Fix para móviles */
+@media (max-width: 768px) {
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    .modern-table {
+        min-width: 800px;
+    }
+}
+
+/* Mejorar performance de renderizado */
+.modern-table tbody tr {
+    will-change: auto;
+    transform: translateZ(0);
+}
+
+/* Optimizar animaciones de hover */
+.modern-table tbody tr:hover {
+    background: var(--bg-primary);
+    transition: background-color 0.15s ease;
+}
