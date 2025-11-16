@@ -1,3 +1,5 @@
+# apps/inventario/urls.py - Agregar estas rutas
+
 from django.urls import path
 from . import views
 
@@ -8,6 +10,9 @@ urlpatterns = [
     path('productos/editar/<int:pk>/', views.editar_producto, name='editar_producto'),
     path('productos/eliminar/<int:pk>/', views.eliminar_producto, name='eliminar_producto'),
     path('productos/detalle/<int:pk>/json/', views.detalle_producto_json, name='detalle_producto_json'),
+    
+    # Nueva ruta para obtener siguiente código
+    path('productos/siguiente-codigo/', views.obtener_siguiente_codigo, name='obtener_siguiente_codigo'),
     
     # Categorías
     path('categorias/', views.lista_categorias, name='lista_categorias'),
