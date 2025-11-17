@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Devolución {{ devolucion.codigo_devolucion }} - MotoShop{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <h1 class="page-title">{{ devolucion.codigo_devolucion }}</h1>
+    <p class="page-subtitle">{{ devolucion.fecha_solicitud|date:"d/m/Y H:i" }}</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                <h5 class="mb-0">Información de la Devolución</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <small class="text-muted">Venta Original</small>
+                        <p><a href="{% url 'detalle_venta' devolucion.venta_original.id %}">Venta #{{ devolucion.venta_original.codigo_venta }}</a></p>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Motivo</small>
+                        <p><span class="badge bg-secondary">{{ devolucion.get_motivo_display }}</span></p>
+                    </div>
+                    <div class="col-12">
+                        <small class="text-muted">Descripción del Motivo</small>
+                        <p>{{ devolucion.descripcion_motivo }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Productos a Devolver</h5>
+            </div>
+            <div class="card-body p-0">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>PRODUCTO</th>
+                            <th class="text-center">CANTIDAD</th>
+                            <th class="text-end">PRECIO UNIT.</th>
+                            <th class="text-end">SUBTOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detalle in detalles %}
+                        <tr>
+                            <td>{{ detalle.descripcion_producto }}</td>
+                            <td class="text-center">{{ detalle.cantidad }}</td>
+                            <td class="text-end">${{ detalle.precio_unitario }}</td>
+                            <td class="text-end"><strong>${{ detalle.subtotal }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>TOTAL:</strong></td>
+                            <td class="text-end"><h4 class="mb-0">${{ devolucion.monto_total }}</h4></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Estado</h5>
+            </div>
+            <div class="card-body">
+                {% if devolucion.estado == 'pendiente' %}
+                    <div class="alert alert-warning">
+                        <strong>Pendiente de Aprobación</strong>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <form method="post" action="{% url 'aprobar_devolucion' devolucion.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success w-100">Aprobar</button>
+                        </form>
+                        <button class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#modalRechazar">Rechazar</button>
+                    </div>
+                {% elif devolucion.estado == 'aprobada' %}
+                    <div class="alert alert-success">
+                        <strong>Aprobada</strong><br>
+                        Lista para procesar
+                    </div>
+                    <form method="post" action="{% url 'procesar_devolucion' devolucion.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary-modern btn-modern w-100">Procesar Devolución</button>
+                    </form>
+                {% elif devolucion.estado == 'procesada' %}
+                    <div class="alert alert-info">
+                        <strong>Procesada</strong><br>
+                        Nota de crédito generada
+                    </div>
+                    {% if nota_credito %}
+                    <a href="{% url 'detalle_nota_credito' nota_credito.id %}" class="btn btn-primary w-100">Ver Nota de Crédito</a>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-danger">
+                        <strong>Rechazada</strong>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Rechazar -->
+<div class="modal fade" id="modalRechazar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Rechazar Devolución</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'rechazar_devolucion' devolucion.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <label class="form-label">Motivo del Rechazo</label>
+                    <textarea name="observaciones_rechazo" class="form-control" rows="3" required></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Rechazar Devolución</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

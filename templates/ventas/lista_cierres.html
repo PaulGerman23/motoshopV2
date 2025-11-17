@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+
+{% block title %}Cierres de Caja - MotoShop{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Cierres de Caja</h1>
+            <p class="page-subtitle">Historial de cierres diarios</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'caja_actual' %}" class="btn btn-modern" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
+                <i class="bi bi-cash-stack"></i> Caja Actual
+            </a>
+            {% if not tiene_cierre_hoy %}
+            <a href="{% url 'crear_cierre' %}" class="btn btn-primary-modern btn-modern">
+                <i class="bi bi-plus-circle"></i> Nuevo Cierre
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">Desde</label>
+                <input type="date" name="fecha_desde" class="form-control" value="{{ request.GET.fecha_desde }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">Hasta</label>
+                <input type="date" name="fecha_hasta" class="form-control" value="{{ request.GET.fecha_hasta }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">Usuario</label>
+                <select name="usuario" class="form-select">
+                    <option value="">Todos los usuarios</option>
+                    {% for cierre in cierres %}
+                        <option value="{{ cierre.usuario.id }}">{{ cierre.usuario.get_full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary-modern btn-modern flex-fill">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+                <a href="{% url 'lista_cierres' %}" class="btn btn-modern" style="background: #f3f4f6; color: #374151;">
+                    <i class="bi bi-x"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Cierres List -->
+<div class="row g-4">
+    {% for cierre in cierres %}
+    <div class="col-lg-6">
+        <div class="card cierre-card">
+            <div class="cierre-header">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="mb-1">Cierre del {{ cierre.fecha|date:"d/m/Y" }}</h5>
+                        <p class="mb-0" style="opacity: 0.9;">
+                            <i class="bi bi-person"></i> {{ cierre.usuario.get_full_name }}
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <h4 class="mb-0">${{ cierre.total_ventas }}</h4>
+                        <small style="opacity: 0.9;">{{ cierre.cantidad_ventas }} ventas</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cierre-body">
+                <!-- Métodos de Pago -->
+                <div class="mb-3">
+                    <h6 class="mb-2">Métodos de Pago</h6>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="d-flex justify-content-between p-2" style="background: #f9fafb; border-radius: 8px;">
+                                <span class="text-muted small">Efectivo:</span>
+                                <strong>${{ cierre.efectivo_ventas }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex justify-content-between p-2" style="background: #f9fafb; border-radius: 8px;">
+                                <span class="text-muted small">Débito:</span>
+                                <strong>${{ cierre.debito_ventas }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex justify-content-between p-2" style="background: #f9fafb; border-radius: 8px;">
+                                <span class="text-muted small">Crédito:</span>
+                                <strong>${{ cierre.credito_ventas }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex justify-content-between p-2" style="background: #f9fafb; border-radius: 8px;">
+                                <span class="text-muted small">Transferencia:</span>
+                                <strong>${{ cierre.transferencia_ventas }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Totales -->
+                <div class="cierre-item">
+                    <span class="cierre-label">Monto Inicial:</span>
+                    <span class="cierre-value">${{ cierre.monto_inicial }}</span>
+                </div>
+
+                <div class="cierre-item">
+                    <span class="cierre-label">Total Ventas:</span>
+                    <span class="cierre-value">${{ cierre.total_ventas }}</span>
+                </div>
+
+                <div class="cierre-item">
+                    <span class="cierre-label">Egresos:</span>
+                    <span class="cierre-value text-danger">-${{ cierre.egresos }}</span>
+                </div>
+
+                <div class="cierre-item">
+                    <span class="cierre-label">Esperado:</span>
+                    <span class="cierre-value">${{ cierre.monto_final_esperado }}</span>
+                </div>
+
+                <div class="cierre-item">
+                    <span class="cierre-label">Real:</span>
+                    <span class="cierre-value">${{ cierre.monto_final_real }}</span>
+                </div>
+
+                <div class="cierre-item" style="border-top: 2px solid #e5e7eb; padding-top: 12px; margin-top: 12px;">
+                    <span class="cierre-label">Diferencia:</span>
+                    <span class="cierre-value {% if cierre.diferencia >= 0 %}diferencia-positiva{% else %}diferencia-negativa{% endif %}">
+                        {% if cierre.diferencia >= 0 %}+{% endif %}${{ cierre.diferencia }}
+                    </span>
+                </div>
+
+                {% if cierre.observaciones %}
+                <div class="mt-3 p-2" style="background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                    <small class="text-muted d-block mb-1"><strong>Observaciones:</strong></small>
+                    <small>{{ cierre.observaciones }}</small>
+                </div>
+                {% endif %}
+
+                <!-- Acciones -->
+                <div class="d-flex gap-2 mt-3">
+                    <a href="{% url 'detalle_cierre' cierre.id %}" class="btn btn-primary-modern btn-modern flex-fill">
+                        <i class="bi bi-eye"></i> Ver Detalle
+                    </a>
+                    <a href="{% url 'exportar_cierre_pdf' cierre.id %}" class="btn btn-modern" style="background: #ef4444; color: white;">
+                        <i class="bi bi-file-pdf"></i> PDF
+                    </a>
+                    <button class="btn btn-modern" style="background: #f3f4f6; color: #374151;" onclick="recalcularCierre({{ cierre.id }})">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <div class="empty-state">
+                    <i class="bi bi-calculator"></i>
+                    <p>No hay cierres de caja registrados</p>
+                    <a href="{% url 'crear_cierre' %}" class="btn btn-primary-modern btn-modern mt-3">
+                        <i class="bi bi-plus-circle"></i>
+                        Crear Primer Cierre
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function recalcularCierre(cierreId) {
+    if (confirm('¿Recalcular los totales de este cierre?')) {
+        fetch(`/ventas/cierres/${cierreId}/recalcular/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            }
+        });
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

@@ -6,6 +6,7 @@
 let carrito = [];
 let ticketActual = null;
 let descuentoGlobal = { tipo: 'porcentaje', valor: 0 };
+let productosOriginales = new Map(); // Cache de productos para validar stock
 
 // ================================================
 // VALIDACIONES
@@ -52,32 +53,29 @@ function validarCarrito() {
 // GESTIÓN DEL CARRITO
 // ================================================
 
+
 function agregarAlCarrito(button) {
     const id = button.getAttribute('data-id');
     const descripcion = button.getAttribute('data-descripcion');
     const precio = parseFloat(button.getAttribute('data-precio'));
     const stock = parseInt(button.getAttribute('data-stock'));
     
-    // Verificar si ya existe en el carrito
-    const itemExistente = carrito.find(item => item.producto_id === id);
-    if (itemExistente) {
-        mostrarNotificacion('Este producto ya está en el carrito. Modifica la cantidad desde el carrito.', 'warning');
+    // Validar duplicado
+    const validacionDuplicado = ValidadorProducto.validarProductoDuplicado(id, carrito);
+    if (!validacionDuplicado.valido) {
+        mostrarNotificacion(validacionDuplicado.mensaje, 'warning');
         return;
     }
     
     // Solicitar cantidad
     const cantidadInput = prompt(`Stock disponible: ${stock} unidades\n\nIngrese la cantidad:`, '1');
-    
-    // Si presiona Cancelar, simplemente retornar sin mensaje
     if (cantidadInput === null) return;
     
     // Validar cantidad
-    const validacion = validarCantidad(cantidadInput, stock);
+    const validacion = ValidadorProducto.validarStock(cantidadInput, stock);
     
     if (!validacion.valido) {
-        if (validacion.mensaje) {
-            mostrarNotificacion(validacion.mensaje, 'danger');
-        }
+        mostrarNotificacion(validacion.mensaje, 'danger');
         return;
     }
     
@@ -428,20 +426,27 @@ async function actualizarListaTickets() {
 // FINALIZAR VENTA
 // ================================================
 
+
+// Validar antes de finalizar venta
 function validarYFinalizarVenta(event) {
     event.preventDefault();
     
-    // Validar carrito
-    const validacionCarrito = validarCarrito();
-    if (!validacionCarrito.valido) {
-        mostrarNotificacion(validacionCarrito.mensaje, 'warning');
-        return false;
-    }
+    const metodoPago = document.getElementById('tipo_pago')?.value || '';
+    const clienteId = document.getElementById('cliente')?.value || '';
     
-    // Validar método de pago
-    const validacionPago = validarMetodoPago();
-    if (!validacionPago.valido) {
-        mostrarNotificacion(validacionPago.mensaje, 'warning');
+    // Preparar datos para validación
+    const datosVenta = {
+        carrito: carrito,
+        metodoPago: metodoPago,
+        descuento: descuentoGlobal,
+        cliente: clienteId ? { id: clienteId } : null
+    };
+    
+    // Validar venta completa
+    const resultado = ValidadorVentaCompleta.validarVentaCompleta(datosVenta);
+    
+    if (!resultado.valido) {
+        UtilidadesValidacion.mostrarErrores(resultado.errores);
         return false;
     }
     

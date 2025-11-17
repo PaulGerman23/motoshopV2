@@ -1,7 +1,7 @@
 # apps/ventas/urls.py - REEMPLAZAR COMPLETAMENTE
 
 from django.urls import path
-from . import views, views_tickets, views_cierre, views_exportacion
+from . import views, views_tickets, views_cierre, views_exportacion, views_devolucion
 
 urlpatterns = [
     # Ventas normales
@@ -23,6 +23,22 @@ urlpatterns = [
     path('cierres/<int:cierre_id>/', views_cierre.detalle_cierre, name='detalle_cierre'),
     path('cierres/<int:cierre_id>/recalcular/', views_cierre.recalcular_cierre, name='recalcular_cierre'),
     path('caja-actual/', views_cierre.caja_actual, name='caja_actual'),
+    
+    # Devoluciones
+    path('devoluciones/', views_devolucion.lista_devoluciones, name='lista_devoluciones'),
+    path('devoluciones/crear/<int:venta_id>/', views_devolucion.crear_devolucion, name='crear_devolucion'),
+    path('devoluciones/<int:devolucion_id>/', views_devolucion.detalle_devolucion, name='detalle_devolucion'),
+    path('devoluciones/<int:devolucion_id>/aprobar/', views_devolucion.aprobar_devolucion, name='aprobar_devolucion'),
+    path('devoluciones/<int:devolucion_id>/rechazar/', views_devolucion.rechazar_devolucion, name='rechazar_devolucion'),
+    path('devoluciones/<int:devolucion_id>/procesar/', views_devolucion.procesar_devolucion, name='procesar_devolucion'),
+    
+    # Notas de Crédito
+    path('notas-credito/', views_devolucion.lista_notas_credito, name='lista_notas_credito'),
+    path('notas-credito/<int:nota_id>/', views_devolucion.detalle_nota_credito, name='detalle_nota_credito'),
+    path('notas-credito/<int:nota_id>/aplicar/', views_devolucion.aplicar_nota_credito, name='aplicar_nota_credito'),
+    
+    # Auditoría
+    path('auditoria/', views_devolucion.auditoria_movimientos, name='auditoria_movimientos'),
     
     # Exportaciones
     path('exportar/venta/<int:venta_id>/pdf/', views_exportacion.exportar_venta_pdf, name='exportar_venta_pdf'),

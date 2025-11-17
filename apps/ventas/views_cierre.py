@@ -1,10 +1,10 @@
-# apps/ventas/views_cierre.py
+# apps/ventas/views_cierre.py - ACTUALIZADO Y CORREGIDO
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum, Count
 from django.utils import timezone
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -126,17 +126,11 @@ def caja_actual(request):
     credito = ventas_hoy.filter(tipo_pago='credito').aggregate(Sum('total'))['total__sum'] or Decimal('0')
     transferencia = ventas_hoy.filter(tipo_pago='transferencia').aggregate(Sum('total'))['total__sum'] or Decimal('0')
     
-    # Ventas por hora (últimas 12 horas)
-    ahora = timezone.now()
-    hace_12_horas = ahora - timedelta(hours=12)
-    
-    ventas_recientes = Venta.objects.filter(
-        fecha__gte=hace_12_horas,
-        fecha__lte=ahora,
-        estado_venta=2
-    ).order_by('-fecha')[:10]
+    # Ventas recientes (últimas 10)
+    ventas_recientes = ventas_hoy.select_related('cliente', 'usuario').order_by('-fecha')[:10]
     
     context = {
+        'fecha': hoy,
         'cierre': cierre,
         'total_ventas': total_ventas,
         'cantidad_ventas': cantidad_ventas,
@@ -156,7 +150,13 @@ def recalcular_cierre(request, cierre_id):
     """Recalcula los totales de un cierre"""
     if request.method == 'POST':
         try:
-            cierre = get_object_or_404(CierreCaja, id=cierre_id, usuario=request.user)
+            cierre = get_object_or_404(CierreCaja, id=cierre_id)
+            
+            # Solo permitir recalcular si es del usuario actual o es admin
+            if cierre.usuario != request.user and not request.user.is_staff:
+                messages.error(request, 'No tienes permisos para recalcular este cierre')
+                return redirect('detalle_cierre', cierre_id=cierre_id)
+            
             cierre.calcular_totales()
             messages.success(request, 'Totales recalculados correctamente')
         except Exception as e:

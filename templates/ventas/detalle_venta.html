@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle Venta #{{ venta.codigo_venta }} - MotoShop{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Venta #{{ venta.codigo_venta }}</h1>
+            <p class="page-subtitle">{{ venta.fecha|date:"d/m/Y H:i" }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'exportar_venta_pdf' venta.id %}" class="btn btn-modern" style="background: #ef4444; color: white;">
+                <i class="bi bi-file-pdf"></i> Exportar PDF
+            </a>
+            {% if venta.estado_venta != 0 %}
+            <button class="btn btn-modern" style="background: #f59e0b; color: white;" data-bs-toggle="modal" data-bs-target="#modalAnular">
+                <i class="bi bi-x-circle"></i> Anular Venta
+            </button>
+            {% endif %}
+            <a href="{% url 'lista_ventas' %}" class="btn btn-modern" style="background: #f3f4f6; color: #374151;">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Información de la Venta -->
+    <div class="col-lg-8">
+        <!-- Encabezado de Venta -->
+        <div class="card mb-4">
+            <div class="detalle-venta-header">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h3 class="mb-2">Venta #{{ venta.codigo_venta }}</h3>
+                        <p class="mb-0" style="opacity: 0.9;">
+                            <i class="bi bi-calendar"></i> {{ venta.fecha|date:"d/m/Y H:i" }}
+                        </p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <h2 class="mb-2">${{ venta.total }}</h2>
+                        <span class="estado-venta {% if venta.estado_venta == 2 %}pagado{% elif venta.estado_venta == 1 %}pendiente{% else %}anulado{% endif %}" style="background: rgba(255,255,255,0.2); color: white; padding: 8px 16px;">
+                            {{ venta.get_estado_venta_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="detalle-venta-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <i class="bi bi-person" style="font-size: 24px; color: #667eea;"></i>
+                            <div class="ms-3">
+                                <small class="text-muted d-block">Cliente</small>
+                                <strong>
+                                    {% if venta.cliente %}
+                                        {{ venta.cliente.nombre_completo }}
+                                    {% else %}
+                                        Consumidor Final
+                                    {% endif %}
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <i class="bi bi-person-badge" style="font-size: 24px; color: #10b981;"></i>
+                            <div class="ms-3">
+                                <small class="text-muted d-block">Vendedor</small>
+                                <strong>{{ venta.usuario.get_full_name }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <i class="bi bi-credit-card" style="font-size: 24px; color: #3b82f6;"></i>
+                            <div class="ms-3">
+                                <small class="text-muted d-block">Método de Pago</small>
+                                <strong>{{ venta.get_tipo_pago_display }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <i class="bi bi-box" style="font-size: 24px; color: #f59e0b;"></i>
+                            <div class="ms-3">
+                                <small class="text-muted d-block">Productos</small>
+                                <strong>{{ detalles.count }} item(s)</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if venta.observacion %}
+                <div class="mt-3 p-3" style="background: #fef3c7; border-radius: 12px; border-left: 4px solid #f59e0b;">
+                    <small class="text-muted d-block mb-1"><strong>Observaciones:</strong></small>
+                    <p class="mb-0">{{ venta.observacion }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Productos -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-box-seam"></i> Productos Vendidos</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>PRODUCTO</th>
+                                <th class="text-center">CANTIDAD</th>
+                                <th class="text-end">PRECIO UNIT.</th>
+                                <th class="text-end">SUBTOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for detalle in detalles %}
+                            <tr class="producto-detalle">
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white;">
+                                            <i class="bi bi-box-seam"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">
+                                                {% if detalle.producto %}
+                                                    {{ detalle.producto.descripcion|truncatewords:10 }}
+                                                {% else %}
+                                                    <span class="text-muted">Producto eliminado</span>
+                                                {% endif %}
+                                            </div>
+                                            {% if detalle.producto %}
+                                                <small class="text-muted">Código: #{{ detalle.producto.codigo }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="producto-cantidad">{{ detalle.cantidad }}</span>
+                                </td>
+                                <td class="text-end">${{ detalle.precio_unitario }}</td>
+                                <td class="text-end"><strong>${{ detalle.subtotal }}</strong></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">
+                                    No hay productos en esta venta
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot style="background: #f9fafb; border-top: 2px solid #e5e7eb;">
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>TOTAL:</strong></td>
+                                <td class="text-end"><h4 class="mb-0 text-success">${{ venta.total }}</h4></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Estado -->
+        <div class="card mb-4">
+            <div class="card-header" style="background: #1f2937; color: white;">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Estado de la Venta</h5>
+            </div>
+            <div class="card-body">
+                {% if venta.estado_venta == 2 %}
+                    <div class="alert alert-success d-flex align-items-start mb-3">
+                        <i class="bi bi-check-circle-fill me-2 mt-1"></i>
+                        <div>
+                            <strong>Venta Pagada</strong><br>
+                            <small>Esta venta fue procesada correctamente.</small>
+                        </div>
+                    </div>
+                {% elif venta.estado_venta == 1 %}
+                    <div class="alert alert-warning d-flex align-items-start mb-3">
+                        <i class="bi bi-exclamation-triangle me-2 mt-1"></i>
+                        <div>
+                            <strong>Pago Pendiente</strong><br>
+                            <small>Esperando confirmación de pago.</small>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-danger d-flex align-items-start mb-3">
+                        <i class="bi bi-x-circle-fill me-2 mt-1"></i>
+                        <div>
+                            <strong>Venta Anulada</strong><br>
+                            <small>Esta venta fue cancelada.</small>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="mb-2">
+                    <small class="text-muted">ID de Venta:</small>
+                    <div><strong>{{ venta.id }}</strong></div>
+                </div>
+                <div class="mb-2">
+                    <small class="text-muted">Código:</small>
+                    <div><span class="code-badge">#{{ venta.codigo_venta }}</span></div>
+                </div>
+                <div>
+                    <small class="text-muted">Fecha de Registro:</small>
+                    <div><strong>{{ venta.fecha|date:"d/m/Y H:i:s" }}</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-gear"></i> Acciones</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'exportar_venta_pdf' venta.id %}" class="btn btn-modern" style="background: #ef4444; color: white;">
+                        <i class="bi bi-file-pdf"></i> Descargar PDF
+                    </a>
+                    <button class="btn btn-modern" style="background: #3b82f6; color: white;" onclick="window.print()">
+                        <i class="bi bi-printer"></i> Imprimir Ticket
+                    </button>
+                    {% if venta.puede_devolverse and venta.estado_venta == 2 %}
+                    <a href="{% url 'crear_devolucion' venta.id %}" class="btn btn-modern" style="background: #f59e0b; color: white;">
+                        <i class="bi bi-arrow-return-left"></i> Crear Devolución
+                    </a>
+                    {% endif %}
+                    {% if venta.estado_venta != 0 %}
+                    <button class="btn btn-modern" style="background: #f59e0b; color: white;" data-bs-toggle="modal" data-bs-target="#modalAnular">
+                        <i class="bi bi-x-circle"></i> Anular Venta
+                    </button>
+                    {% endif %}
+                    <a href="{% url 'lista_ventas' %}" class="btn btn-modern" style="background: #f3f4f6; color: #374151;">
+                        <i class="bi bi-arrow-left"></i> Volver al Listado
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cliente Info -->
+        {% if venta.cliente %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-person-circle"></i> Información del Cliente</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <small class="text-muted">Nombre:</small>
+                    <div><strong>{{ venta.cliente.nombre_completo }}</strong></div>
+                </div>
+                {% if venta.cliente.telefono %}
+                <div class="mb-2">
+                    <small class="text-muted">Teléfono:</small>
+                    <div><strong>{{ venta.cliente.telefono }}</strong></div>
+                </div>
+                {% endif %}
+                {% if venta.cliente.email %}
+                <div class="mb-2">
+                    <small class="text-muted">Email:</small>
+                    <div><strong>{{ venta.cliente.email }}</strong></div>
+                </div>
+                {% endif %}
+                <a href="{% url 'editar_cliente' venta.cliente.id %}" class="btn btn-sm btn-primary-modern btn-modern w-100 mt-2">
+                    Ver Perfil Completo
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal Anular Venta -->
+<div class="modal fade" id="modalAnular" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Anular Venta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="delete-icon mb-3">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <h6>¿Estás seguro de anular esta venta?</h6>
+                <p class="text-muted mb-0">Venta #{{ venta.codigo_venta }} - ${{ venta.total }}</p>
+                <div class="alert alert-warning mt-3 text-start">
+                    <small><i class="bi bi-info-circle"></i> Esta acción restaurará el stock de los productos vendidos y marcará la venta como anulada.</small>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" action="{% url 'anular_venta' venta.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-x-circle"></i> Anular Venta
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.info-box {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+}
+
+@media print {
+    .btn, .page-header, .card-header, .modal {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .detalle-venta-header {
+        background: white !important;
+        color: black !important;
+    }
+}
+</style>
+{% endblock %}

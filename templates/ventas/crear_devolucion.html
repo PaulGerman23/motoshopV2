@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear Devolución - MotoShop{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <h1 class="page-title">Crear Devolución</h1>
+    <p class="page-subtitle">Venta #{{ venta.codigo_venta }}</p>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Productos a Devolver</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Motivo de Devolución *</label>
+                        <select name="motivo" class="form-select" required>
+                            <option value="defecto">Producto Defectuoso</option>
+                            <option value="error">Error en la Venta</option>
+                            <option value="cliente">Solicitud del Cliente</option>
+                            <option value="garantia">Garantía</option>
+                            <option value="otro">Otro Motivo</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Descripción del Motivo *</label>
+                        <textarea name="descripcion_motivo" class="form-control" rows="3" required></textarea>
+                    </div>
+
+                    <h6 class="mb-3">Seleccione los productos</h6>
+                    
+                    {% for detalle in detalles %}
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="producto_id" value="{{ detalle.producto.id }}" id="prod{{ detalle.producto.id }}">
+                                <label class="form-check-label" for="prod{{ detalle.producto.id }}">
+                                    <strong>{{ detalle.producto.descripcion }}</strong>
+                                </label>
+                            </div>
+                            
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <small class="text-muted">Cantidad vendida: {{ detalle.cantidad }}</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">Cantidad a devolver:</label>
+                                    <input type="number" name="cantidad_{{ detalle.producto.id }}" class="form-control form-control-sm" min="1" max="{{ detalle.cantidad }}" value="{{ detalle.cantidad }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Precio: ${{ detalle.precio_unitario }}</small>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-2">
+                                <label class="form-label small">Motivo específico (opcional):</label>
+                                <input type="text" name="motivo_especifico_{{ detalle.producto.id }}" class="form-control form-control-sm" placeholder="Ej: rayado, no funciona, etc.">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <div class="d-flex gap-2 mt-4">
+                        <a href="{% url 'detalle_venta' venta.id %}" class="btn btn-secondary flex-fill">Cancelar</a>
+                        <button type="submit" class="btn btn-primary-modern btn-modern flex-fill">
+                            <i class="bi bi-check"></i> Crear Devolución
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Información de la Venta</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Código:</strong> #{{ venta.codigo_venta }}</p>
+                <p><strong>Fecha:</strong> {{ venta.fecha|date:"d/m/Y" }}</p>
+                <p><strong>Total Original:</strong> ${{ venta.total }}</p>
+                <p><strong>Cliente:</strong> {{ venta.cliente.nombre_completo|default:"Consumidor Final" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

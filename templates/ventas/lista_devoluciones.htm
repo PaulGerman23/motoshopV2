@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}Devoluciones - MotoShop{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Gestión de Devoluciones</h1>
+            <p class="page-subtitle">Administra las devoluciones de productos</p>
+        </div>
+        <a href="{% url 'lista_ventas' %}" class="btn btn-modern" style="background: #f3f4f6; color: #374151;">
+            <i class="bi bi-arrow-left"></i> Volver a Ventas
+        </a>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card" style="border-left: 4px solid #f59e0b;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <small class="text-muted">Pendientes</small>
+                        <h3 class="mb-0">{{ stats.pendientes }}</h3>
+                    </div>
+                    <div style="font-size: 32px; color: #f59e0b;">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card" style="border-left: 4px solid #10b981;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <small class="text-muted">Aprobadas</small>
+                        <h3 class="mb-0">{{ stats.aprobadas }}</h3>
+                    </div>
+                    <div style="font-size: 32px; color: #10b981;">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card" style="border-left: 4px solid #3b82f6;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <small class="text-muted">Procesadas</small>
+                        <h3 class="mb-0">{{ stats.procesadas }}</h3>
+                    </div>
+                    <div style="font-size: 32px; color: #3b82f6;">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card" style="border-left: 4px solid #ef4444;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <small class="text-muted">Rechazadas</small>
+                        <h3 class="mb-0">{{ stats.rechazadas }}</h3>
+                    </div>
+                    <div style="font-size: 32px; color: #ef4444;">
+                        <i class="bi bi-x-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <select name="estado" class="form-select">
+                    <option value="">Todos los estados</option>
+                    <option value="pendiente" {% if estado_actual == 'pendiente' %}selected{% endif %}>Pendientes</option>
+                    <option value="aprobada" {% if estado_actual == 'aprobada' %}selected{% endif %}>Aprobadas</option>
+                    <option value="procesada" {% if estado_actual == 'procesada' %}selected{% endif %}>Procesadas</option>
+                    <option value="rechazada" {% if estado_actual == 'rechazada' %}selected{% endif %}>Rechazadas</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary-modern btn-modern w-100">
+                    <i class="bi bi-search"></i> Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Devoluciones List -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>CÓDIGO</th>
+                        <th>VENTA ORIGINAL</th>
+                        <th>FECHA SOLICITUD</th>
+                        <th>MOTIVO</th>
+                        <th>MONTO</th>
+                        <th>SOLICITADO POR</th>
+                        <th>ESTADO</th>
+                        <th>ACCIONES</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for devolucion in devoluciones %}
+                    <tr>
+                        <td><span class="code-badge">{{ devolucion.codigo_devolucion }}</span></td>
+                        <td>
+                            <a href="{% url 'detalle_venta' devolucion.venta_original.id %}">
+                                Venta #{{ devolucion.venta_original.codigo_venta }}
+                            </a>
+                        </td>
+                        <td>{{ devolucion.fecha_solicitud|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <span class="badge bg-secondary">{{ devolucion.get_motivo_display }}</span>
+                        </td>
+                        <td><strong>${{ devolucion.monto_total }}</strong></td>
+                        <td>{{ devolucion.usuario_solicita.get_full_name }}</td>
+                        <td>
+                            {% if devolucion.estado == 'pendiente' %}
+                                <span class="badge" style="background: #f59e0b;">Pendiente</span>
+                            {% elif devolucion.estado == 'aprobada' %}
+                                <span class="badge" style="background: #10b981;">Aprobada</span>
+                            {% elif devolucion.estado == 'procesada' %}
+                                <span class="badge" style="background: #3b82f6;">Procesada</span>
+                            {% else %}
+                                <span class="badge" style="background: #ef4444;">Rechazada</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'detalle_devolucion' devolucion.id %}" class="btn-action btn-action-view">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if devolucion.estado == 'pendiente' %}
+                                <form method="post" action="{% url 'aprobar_devolucion' devolucion.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-action" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                                        <i class="bi bi-check"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <p>No hay devoluciones registradas</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
