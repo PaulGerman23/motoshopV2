@@ -1,53 +1,96 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Nueva Venta - MotoShop{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/productos-fix.css' %}">
+<style>
+.cart-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 10px;
+    background: #f9fafb;
+}
+
+.cart-item input[type="number"] {
+    text-align: center;
+}
+
+.badge-stock {
+    font-size: 11px;
+    padding: 4px 8px;
+}
+
+.product-search-box {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+    padding-bottom: 10px;
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="bi bi-cart-plus"></i> Registrar Nueva Venta</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="{% url 'lista_ventas' %}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Volver
-        </a>
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Nueva Venta</h1>
+            <p class="page-subtitle">Registra una nueva venta en el sistema</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-modern" style="background: #f59e0b; color: white;" data-bs-toggle="modal" data-bs-target="#modalTickets">
+                <i class="bi bi-ticket-perforated"></i>
+                Tickets Pendientes
+            </button>
+            <a href="{% url 'lista_ventas' %}" class="btn btn-modern" style="background: #f3f4f6; color: #374151;">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
     </div>
 </div>
 
 <div class="row">
-    <!-- Formulario de venta -->
-    <div class="col-md-7">
-        <div class="card shadow mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-search"></i> Seleccionar Productos</h5>
+    <!-- Lista de productos -->
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-search"></i> Buscar Productos</h5>
             </div>
             <div class="card-body">
-                <!-- Buscador de productos -->
-                <div class="mb-3">
-                    <label class="form-label">Buscar Producto</label>
-                    <input type="text" class="form-control" id="buscarProducto" placeholder="Buscar por código o descripción...">
+                <div class="product-search-box">
+                    <div class="search-box-modern mb-3">
+                        <i class="bi bi-search"></i>
+                        <input type="text" class="form-control" id="buscarProducto" placeholder="Buscar por código o descripción...">
+                    </div>
                 </div>
 
-                <!-- Lista de productos -->
-                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                    <table class="table table-hover table-sm">
-                        <thead class="table-light sticky-top">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
                             <tr>
                                 <th>Código</th>
                                 <th>Descripción</th>
                                 <th>Precio</th>
                                 <th>Stock</th>
-                                <th>Acción</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody id="listaProductos">
                             {% for producto in productos %}
                             <tr>
-                                <td>{{ producto.codigo }}</td>
-                                <td>{{ producto.descripcion|truncatewords:5 }}</td>
-                                <td>${{ producto.precio_venta }}</td>
+                                <td><span class="code-badge">#{{ producto.codigo }}</span></td>
+                                <td>{{ producto.descripcion|truncatewords:8 }}</td>
+                                <td><strong>${{ producto.precio_venta }}</strong></td>
                                 <td>
-                                    <span class="badge {% if producto.stock < 10 %}bg-danger{% else %}bg-success{% endif %}">
-                                        {{ producto.stock }}
-                                    </span>
+                                    {% if producto.stock <= producto.stock_minimo %}
+                                        <span class="badge bg-danger badge-stock">{{ producto.stock }}</span>
+                                    {% elif producto.stock <= 20 %}
+                                        <span class="badge bg-warning badge-stock">{{ producto.stock }}</span>
+                                    {% else %}
+                                        <span class="badge bg-success badge-stock">{{ producto.stock }}</span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-primary" 
@@ -55,14 +98,17 @@
                                             data-descripcion="{{ producto.descripcion }}"
                                             data-precio="{{ producto.precio_venta }}"
                                             data-stock="{{ producto.stock }}"
-                                            onclick="agregarAlCarrito(this)">
-                                        <i class="bi bi-plus"></i>
+                                            onclick="agregarAlCarrito(this)"
+                                            {% if producto.stock == 0 %}disabled{% endif %}>
+                                        <i class="bi bi-plus-lg"></i>
                                     </button>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center text-muted">No hay productos disponibles</td>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    No hay productos disponibles
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -73,16 +119,16 @@
     </div>
 
     <!-- Carrito de compra -->
-    <div class="col-md-5">
-        <div class="card shadow mb-4">
-            <div class="card-header bg-success text-white">
+    <div class="col-lg-5">
+        <div class="card sticky-top" style="top: 20px;">
+            <div class="card-header" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
                 <h5 class="mb-0"><i class="bi bi-cart-check"></i> Carrito de Venta</h5>
             </div>
             <div class="card-body">
                 <form method="post" id="formVenta">
                     {% csrf_token %}
                     
-                    <!-- Información del cliente -->
+                    <!-- Cliente -->
                     <div class="mb-3">
                         <label for="cliente" class="form-label">Cliente</label>
                         <select name="cliente" id="cliente" class="form-select">
@@ -95,47 +141,71 @@
 
                     <!-- Tipo de pago -->
                     <div class="mb-3">
-                        <label for="tipo_pago" class="form-label">Tipo de Pago *</label>
+                        <label for="tipo_pago" class="form-label">Método de Pago *</label>
                         <select name="tipo_pago" id="tipo_pago" class="form-select" required>
+                            <option value="">Seleccionar...</option>
                             <option value="efectivo">Efectivo</option>
-                            <option value="tarjeta">Tarjeta</option>
+                            <option value="debito">Tarjeta de Débito</option>
+                            <option value="credito">Tarjeta de Crédito</option>
                             <option value="transferencia">Transferencia</option>
-                            <option value="mercadopago">Mercado Pago</option>
                         </select>
                     </div>
 
                     <!-- Observaciones -->
                     <div class="mb-3">
                         <label for="observacion" class="form-label">Observaciones</label>
-                        <textarea name="observacion" id="observacion" class="form-control" rows="2"></textarea>
+                        <textarea name="observacion" id="observacion" class="form-control" rows="2" placeholder="Notas adicionales..."></textarea>
                     </div>
 
                     <!-- Productos del carrito -->
-                    <div id="carritoContainer">
-                        <h6 class="border-bottom pb-2 mb-2">Productos:</h6>
-                        <div id="carritoItems" class="mb-3">
-                            <p class="text-muted text-center">El carrito está vacío</p>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">Productos:</h6>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="limpiarCarrito()">
+                                <i class="bi bi-trash"></i> Limpiar
+                            </button>
+                        </div>
+                        <div id="carritoItems" style="max-height: 300px; overflow-y: auto;">
+                            <p class="text-muted text-center py-4">El carrito está vacío</p>
                         </div>
                     </div>
 
-                    <!-- Total -->
-                    <div class="alert alert-info">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <strong>TOTAL:</strong>
-                            <h3 class="mb-0" id="totalVenta">$0.00</h3>
+                    <!-- Descuento -->
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-sm btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#modalDescuento">
+                            <i class="bi bi-percent"></i> Aplicar Descuento
+                        </button>
+                    </div>
+
+                    <!-- Totales -->
+                    <div class="card mb-3" style="background: #f9fafb;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Subtotal:</span>
+                                <strong id="subtotalVenta">$0.00</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Descuento:</span>
+                                <strong id="descuentoVenta" class="text-danger">-$0.00</strong>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <strong>TOTAL:</strong>
+                                <h4 class="mb-0 text-success" id="totalVenta">$0.00</h4>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Campo oculto para productos -->
                     <input type="hidden" name="productos" id="productosJSON">
 
-                    <!-- Botones -->
+                    <!-- Botones de acción -->
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-success btn-lg" id="btnFinalizarVenta" disabled>
                             <i class="bi bi-check-circle"></i> Finalizar Venta
                         </button>
-                        <button type="button" class="btn btn-outline-secondary" onclick="limpiarCarrito()">
-                            <i class="bi bi-trash"></i> Limpiar Carrito
+                        <button type="button" class="btn btn-warning" id="btnGuardarTicket" onclick="guardarTicket()" disabled>
+                            <i class="bi bi-ticket"></i> Guardar como Ticket
                         </button>
                     </div>
                 </form>
@@ -143,115 +213,58 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de Descuento -->
+<div class="modal fade" id="modalDescuento" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Aplicar Descuento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Tipo de Descuento</label>
+                    <select class="form-select" id="tipoDescuento">
+                        <option value="porcentaje">Porcentaje (%)</option>
+                        <option value="monto">Monto Fijo ($)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Valor</label>
+                    <input type="number" class="form-control" id="valorDescuento" min="0" step="0.01" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="quitarDescuento()">Quitar Descuento</button>
+                <button type="button" class="btn btn-primary" onclick="aplicarDescuento()">Aplicar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Tickets Pendientes -->
+<div class="modal fade" id="modalTickets" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Tickets Pendientes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="listaTickets">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    let carrito = [];
-
-    function agregarAlCarrito(button) {
-        const id = button.getAttribute('data-id');
-        const descripcion = button.getAttribute('data-descripcion');
-        const precio = parseFloat(button.getAttribute('data-precio'));
-        const stock = parseInt(button.getAttribute('data-stock'));
-        
-        const cantidad = prompt(`Cantidad (Stock: ${stock}):`, '1');
-        
-        if (cantidad && parseInt(cantidad) > 0 && parseInt(cantidad) <= stock) {
-            const cant = parseInt(cantidad);
-            const item = {
-                producto_id: id,
-                descripcion: descripcion,
-                precio: precio,
-                cantidad: cant,
-                subtotal: precio * cant
-            };
-            
-            carrito.push(item);
-            actualizarCarrito();
-            
-            // Mostrar notificación
-            const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
-            alertDiv.style.zIndex = '9999';
-            alertDiv.innerHTML = 'Producto agregado <button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
-            document.body.appendChild(alertDiv);
-            setTimeout(() => alertDiv.remove(), 3000);
-        } else {
-            alert('Cantidad inválida o stock insuficiente');
-        }
-    }
-
-    function actualizarCarrito() {
-        const container = document.getElementById('carritoItems');
-        const totalEl = document.getElementById('totalVenta');
-        const btnFinalizar = document.getElementById('btnFinalizarVenta');
-        
-        if (carrito.length === 0) {
-            container.innerHTML = '<p class="text-muted text-center">El carrito está vacío</p>';
-            totalEl.textContent = '$0.00';
-            btnFinalizar.disabled = true;
-            return;
-        }
-        
-        let html = '';
-        let total = 0;
-        
-        carrito.forEach((item, index) => {
-            total += item.subtotal;
-            html += `
-                <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
-                    <div class="flex-grow-1">
-                        <small class="text-muted">${item.descripcion}</small><br>
-                        <strong>${item.cantidad} x $${item.precio.toFixed(2)}</strong>
-                    </div>
-                    <div class="text-end">
-                        <strong class="text-success">$${item.subtotal.toFixed(2)}</strong><br>
-                        <button type="button" class="btn btn-sm btn-danger" onclick="eliminarItem(${index})">
-                            <i class="bi bi-x"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-        });
-        
-        container.innerHTML = html;
-        totalEl.textContent = `$${total.toFixed(2)}`;
-        btnFinalizar.disabled = false;
-        
-        // Actualizar JSON para enviar al backend
-        document.getElementById('productosJSON').value = JSON.stringify(carrito);
-    }
-
-    function eliminarItem(index) {
-        carrito.splice(index, 1);
-        actualizarCarrito();
-    }
-
-    function limpiarCarrito() {
-        if (confirm('¿Limpiar todo el carrito?')) {
-            carrito = [];
-            actualizarCarrito();
-        }
-    }
-
-    // Búsqueda de productos
-    document.getElementById('buscarProducto').addEventListener('input', function(e) {
-        const texto = e.target.value.toLowerCase();
-        const filas = document.querySelectorAll('#listaProductos tr');
-        
-        filas.forEach(fila => {
-            const contenido = fila.textContent.toLowerCase();
-            fila.style.display = contenido.includes(texto) ? '' : 'none';
-        });
-    });
-
-    // Validar formulario antes de enviar
-    document.getElementById('formVenta').addEventListener('submit', function(e) {
-        if (carrito.length === 0) {
-            e.preventDefault();
-            alert('Debe agregar al menos un producto al carrito');
-        }
-    });
-</script>
+<script src="{% static 'js/ventas-pos.js' %}"></script>
 {% endblock %}
