@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Auditoría de Movimientos - MotoShop{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <h1 class="page-title">Auditoría de Movimientos</h1>
+    <p class="page-subtitle">Registro completo de operaciones del sistema</p>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small">Tipo de Acción</label>
+                <select name="accion" class="form-select">
+                    <option value="">Todas las acciones</option>
+                    {% for codigo, nombre in acciones %}
+                    <option value="{{ codigo }}" {% if request.GET.accion == codigo %}selected{% endif %}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Usuario</label>
+                <select name="usuario" class="form-select">
+                    <option value="">Todos los usuarios</option>
+                    {% for usuario in usuarios %}
+                    <option value="{{ usuario.id }}">{{ usuario.get_full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Desde</label>
+                <input type="date" name="fecha_desde" class="form-control" value="{{ request.GET.fecha_desde }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Hasta</label>
+                <input type="date" name="fecha_hasta" class="form-control" value="{{ request.GET.fecha_hasta }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary-modern btn-modern w-100">
+                    <i class="bi bi-search"></i> Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tabla de Auditoría -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>FECHA/HORA</th>
+                        <th>USUARIO</th>
+                        <th>ACCIÓN</th>
+                        <th>DESCRIPCIÓN</th>
+                        <th>REFERENCIA</th>
+                        <th>IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mov in movimientos %}
+                    <tr>
+                        <td>
+                            <div>{{ mov.fecha|date:"d/m/Y" }}</div>
+                            <small class="text-muted">{{ mov.fecha|date:"H:i:s" }}</small>
+                        </td>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar" style="width: 32px; height: 32px; font-size: 12px;">
+                                    {{ mov.usuario.first_name.0 }}{{ mov.usuario.last_name.0 }}
+                                </div>
+                                <div>
+                                    <div style="font-size: 13px; font-weight: 600;">
+                                        {{ mov.usuario.get_full_name }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge" style="
+                                {% if 'crear' in mov.accion %}background: #10b981;
+                                {% elif 'anular' in mov.accion or 'eliminar' in mov.accion %}background: #ef4444;
+                                {% elif 'modificar' in mov.accion or 'editar' in mov.accion %}background: #f59e0b;
+                                {% elif 'aprobar' in mov.accion %}background: #3b82f6;
+                                {% else %}background: #6b7280;{% endif %}
+                            ">
+                                {{ mov.get_accion_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <small>{{ mov.descripcion }}</small>
+                        </td>
+                        <td>
+                            {% if mov.venta %}
+                                <a href="{% url 'detalle_venta' mov.venta.id %}">Venta #{{ mov.venta.codigo_venta }}</a>
+                            {% elif mov.devolucion %}
+                                <a href="{% url 'detalle_devolucion' mov.devolucion.id %}">{{ mov.devolucion.codigo_devolucion }}</a>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-monospace">{{ mov.ip_address|default:"-" }}</small>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="bi bi-journal-text"></i>
+                                <p>No hay registros de auditoría</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if movimientos %}
+<div class="text-center mt-3">
+    <small class="text-muted">Mostrando los últimos 100 registros</small>
+</div>
+{% endif %}
+{% endblock %}

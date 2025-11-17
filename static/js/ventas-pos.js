@@ -588,3 +588,105 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('✓ Sistema POS inicializado correctamente');
 });
+// Agregar al final del archivo
+
+// Manejar pago mixto
+document.getElementById('tipo_pago')?.addEventListener('change', function() {
+    const pagoMixtoContainer = document.getElementById('pagoMixtoContainer');
+    
+    if (this.value === 'mixto') {
+        pagoMixtoContainer.style.display = 'block';
+        actualizarSumaPagoMixto();
+    } else {
+        pagoMixtoContainer.style.display = 'none';
+    }
+});
+
+// Calcular suma de pago mixto
+function actualizarSumaPagoMixto() {
+    const montoEfectivo = parseFloat(document.getElementById('montoEfectivo')?.value || 0);
+    const montoTarjeta = parseFloat(document.getElementById('montoTarjeta')?.value || 0);
+    const suma = montoEfectivo + montoTarjeta;
+    const total = calcularTotal();
+    
+    const sumaEl = document.getElementById('sumaPagoMixto');
+    if (sumaEl) {
+        sumaEl.textContent = `Suma: $${suma.toFixed(2)}`;
+        
+        if (Math.abs(suma - total) < 0.01) {
+            sumaEl.className = 'text-success d-block mt-2';
+        } else {
+            sumaEl.className = 'text-danger d-block mt-2';
+        }
+    }
+}
+
+document.getElementById('montoEfectivo')?.addEventListener('input', actualizarSumaPagoMixto);
+document.getElementById('montoTarjeta')?.addEventListener('input', actualizarSumaPagoMixto);
+
+// Modificar la función validarYFinalizarVenta para incluir pago mixto
+function validarYFinalizarVenta(event) {
+    event.preventDefault();
+    
+    const metodoPago = document.getElementById('tipo_pago')?.value || '';
+    const clienteId = document.getElementById('cliente')?.value || '';
+    
+    // Validar pago mixto
+    if (metodoPago === 'mixto') {
+        const montoEfectivo = parseFloat(document.getElementById('montoEfectivo')?.value || 0);
+        const montoTarjeta = parseFloat(document.getElementById('montoTarjeta')?.value || 0);
+        const total = calcularTotal();
+        
+        if (Math.abs((montoEfectivo + montoTarjeta) - total) > 0.01) {
+            mostrarNotificacion('Los montos del pago mixto deben sumar el total de la venta', 'danger');
+            return false;
+        }
+        
+        // Agregar campos ocultos para pago mixto
+        const formPago = event.target;
+        
+        const inputEfectivo = document.createElement('input');
+        inputEfectivo.type = 'hidden';
+        inputEfectivo.name = 'monto_efectivo';
+        inputEfectivo.value = montoEfectivo;
+        formPago.appendChild(inputEfectivo);
+        
+        const inputTarjeta = document.createElement('input');
+        inputTarjeta.type = 'hidden';
+        inputTarjeta.name = 'monto_tarjeta';
+        inputTarjeta.value = montoTarjeta;
+        formPago.appendChild(inputTarjeta);
+    }
+    
+    // Preparar datos para validación
+    const datosVenta = {
+        carrito: carrito,
+        metodoPago: metodoPago,
+        descuento: descuentoGlobal,
+        cliente: clienteId ? { id: clienteId } : null
+    };
+    
+    // Validar venta completa
+    const resultado = ValidadorVentaCompleta.validarVentaCompleta(datosVenta);
+    
+    if (!resultado.valido) {
+        UtilidadesValidacion.mostrarErrores(resultado.errores);
+        return false;
+    }
+    
+    // Si hay ticket actual, finalizar ticket
+    if (ticketActual) {
+        finalizarTicket();
+        return false;
+    }
+    
+    // Agregar datos de descuento al formulario
+    const descuentoInput = document.createElement('input');
+    descuentoInput.type = 'hidden';
+    descuentoInput.name = 'descuento';
+    descuentoInput.value = JSON.stringify(descuentoGlobal);
+    event.target.appendChild(descuentoInput);
+    
+    // Continuar con el submit
+    event.target.submit();
+}

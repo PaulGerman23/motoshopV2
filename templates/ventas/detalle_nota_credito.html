@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ nota.codigo_nota }} - MotoShop{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <h1 class="page-title">{{ nota.codigo_nota }}</h1>
+    <p class="page-subtitle">Nota de Crédito</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                <h5 class="mb-0">Información de la Nota de Crédito</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <small class="text-muted">Monto Original</small>
+                        <h3 class="mb-0">${{ nota.monto }}</h3>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">Saldo Disponible</small>
+                        <h3 class="mb-0 text-success">${{ nota.saldo_disponible }}</h3>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">Estado</small>
+                        <p><span class="badge bg-primary">{{ nota.get_estado_display }}</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if aplicaciones %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Aplicaciones</h5>
+            </div>
+            <div class="card-body p-0">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>FECHA</th>
+                            <th>VENTA</th>
+                            <th>MONTO APLICADO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for aplicacion in aplicaciones %}
+                        <tr>
+                            <td>{{ aplicacion.fecha_aplicacion|date:"d/m/Y H:i" }}</td>
+                            <td><a href="{% url 'detalle_venta' aplicacion.venta.id %}">Venta #{{ aplicacion.venta.codigo_venta }}</a></td>
+                            <td><strong>${{ aplicacion.monto_aplicado }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Estado</h5>
+            </div>
+            <div class="card-body">
+                {% if vigente %}
+                <div class="alert alert-success">
+                    <strong>Nota Vigente</strong><br>
+                    Disponible para usar
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <strong>No Disponible</strong>
+                </div>
+                {% endif %}
+
+                <div class="mb-2">
+                    <small class="text-muted">Fecha Emisión:</small>
+                    <p>{{ nota.fecha_emision|date:"d/m/Y" }}</p>
+                </div>
+                <div class="mb-2">
+                    <small class="text-muted">Fecha Vencimiento:</small>
+                    <p>{{ nota.fecha_vencimiento|date:"d/m/Y" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
