@@ -1,0 +1,372 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Reporte de Clientes - MotoShop{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/reportes.css' %}">
+{% endblock %}
+{% block content %}
+<!-- Page Header -->
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Reporte de Clientes</h1>
+            <p class="page-subtitle">Análisis y estadísticas de clientes</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-modern" style="background: #ef4444; color: white;" onclick="exportarPDF()">
+                <i class="bi bi-file-pdf"></i> Exportar PDF
+            </button>
+            <button class="btn btn-modern" style="background: #10b981; color: white;" onclick="window.print()">
+                <i class="bi bi-printer"></i> Imprimir
+            </button>
+            <a href="{% url 'reportes' %}" class="btn btn-modern" style="background: #f3f4f6; color: #374151;">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+</div>
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="reporte-stat-card" style="border-left: 4px solid #667eea;">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                <i class="bi bi-people"></i>
+            </div>
+            <div class="stat-content">
+                <small class="stat-label">Total Clientes</small>
+                <h3 class="stat-value">{{ total_clientes }}</h3>
+            </div>
+        </div>
+    </div>
+<div class="col-xl-3 col-md-6">
+    <div class="reporte-stat-card" style="border-left: 4px solid #10b981;">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+            <i class="bi bi-cart-check"></i>
+        </div>
+        <div class="stat-content">
+            <small class="stat-label">Con Compras</small>
+            <h3 class="stat-value">{{ clientes_con_compras }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="col-xl-3 col-md-6">
+    <div class="reporte-stat-card" style="border-left: 4px solid #f59e0b;">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+            <i class="bi bi-cart-x"></i>
+        </div>
+        <div class="stat-content">
+            <small class="stat-label">Sin Compras</small>
+            <h3 class="stat-value text-warning">{{ clientes_sin_compras }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="col-xl-3 col-md-6">
+    <div class="reporte-stat-card" style="border-left: 4px solid #3b82f6;">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+            <i class="bi bi-calculator"></i>
+        </div>
+        <div class="stat-content">
+            <small class="stat-label">Valor Promedio</small>
+            <h3 class="stat-value">${{ valor_promedio|floatformat:2 }}</h3>
+        </div>
+    </div>
+</div>
+</div>
+<!-- Gráficos -->
+<div class="row g-4 mb-4">
+    <!-- Top Clientes por Monto -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-trophy-fill text-warning"></i> Top 10 Clientes por Monto</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>CLIENTE</th>
+                                <th class="text-center">COMPRAS</th>
+                                <th class="text-end">TOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cliente in clientes_top_monto %}
+                            <tr>
+                                <td><span class="ranking-badge">{{ forloop.counter }}</span></td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="user-avatar-sm">
+                                            {{ cliente.nombre.0 }}{{ cliente.apellido.0 }}
+                                        </div>
+                                        <div>
+                                            <div>{{ cliente.nombre }} {{ cliente.apellido }}</div>
+                                            <small class="text-muted">Cliente #{{ cliente.codigo_cliente }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary">{{ cliente.cantidad_compras }}</span>
+                                </td>
+                                <td class="text-end">
+                                    <strong class="text-success">${{ cliente.total_comprado|floatformat:2 }}</strong>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">No hay datos disponibles</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- Top Clientes por Frecuencia -->
+<div class="col-lg-6">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-star-fill text-warning"></i> Top 10 Clientes Frecuentes</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>CLIENTE</th>
+                            <th class="text-center">COMPRAS</th>
+                            <th class="text-end">TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cliente in clientes_top_frecuencia %}
+                        <tr>
+                            <td><span class="ranking-badge">{{ forloop.counter }}</span></td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="user-avatar-sm">
+                                        {{ cliente.nombre.0 }}{{ cliente.apellido.0 }}
+                                    </div>
+                                    <div>
+                                        <div>{{ cliente.nombre }} {{ cliente.apellido }}</div>
+                                        <small class="text-muted">Cliente #{{ cliente.codigo_cliente }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success">{{ cliente.cantidad_compras }}</span>
+                            </td>
+                            <td class="text-end">
+                                {% if cliente.total_comprado %}
+                                    <strong>${{ cliente.total_comprado|floatformat:2 }}</strong>
+                                {% else %}
+                                    <span class="text-muted">$0.00</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">No hay datos disponibles</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+<!-- Análisis por Condición IVA -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Clientes por Condición IVA</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="condicionIVAChart"></canvas>
+            <div class="mt-4">
+                {% for item in clientes_por_iva %}
+                <div class="condicion-iva-item">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-semibold">{{ item.condicion_iva }}</span>
+                        <span class="badge bg-primary">{{ item.cantidad }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">Total vendido:</small>
+                        <strong class="text-success">
+                            {% if item.total_vendido %}
+                                ${{ item.total_vendido|floatformat:2 }}
+                            {% else %}
+                                $0.00
+                            {% endif %}
+                        </strong>
+                    </div>
+                    <hr class="my-2">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Métricas Adicionales -->
+<div class="col-lg-6">
+    <div class="card h-100">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-graph-up"></i> Métricas Clave</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="metrica-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted d-block">Tasa de Conversión</small>
+                                <h4 class="mb-0">
+                                    {% if total_clientes > 0 %}
+                                        {{ clientes_con_compras|mul:100|div:total_clientes|floatformat:1 }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </h4>
+                            </div>
+                            <div class="metrica-icon" style="background: rgba(102, 126, 234, 0.1); color: #667eea;">
+                                <i class="bi bi-percent"></i>
+                            </div>
+                        </div>
+                        <small class="text-muted">Clientes que han comprado</small>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="metrica-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted d-block">Valor Promedio por Compra</small>
+                                <h4 class="mb-0">${{ valor_promedio|floatformat:2 }}</h4>
+                            </div>
+                            <div class="metrica-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                                <i class="bi bi-cash-coin"></i>
+                            </div>
+                        </div>
+                        <small class="text-muted">Ticket promedio</small>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="metrica-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted d-block">Clientes Activos</small>
+                                <h4 class="mb-0">{{ clientes_con_compras }}</h4>
+                            </div>
+                            <div class="metrica-icon" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                                <i class="bi bi-person-check"></i>
+                            </div>
+                        </div>
+                        <small class="text-muted">Con al menos 1 compra</small>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="metrica-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted d-block">Potencial Sin Explotar</small>
+                                <h4 class="mb-0 text-warning">{{ clientes_sin_compras }}</h4>
+                            </div>
+                            <div class="metrica-icon" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </div>
+                        </div>
+                        <small class="text-muted">Clientes sin compras</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+<!-- Insights y Recomendaciones -->
+<div class="row g-4">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Insights y Recomendaciones</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="insight-card">
+                            <div class="insight-icon">
+                                <i class="bi bi-arrow-up-circle text-success"></i>
+                            </div>
+                            <h6>Oportunidad de Crecimiento</h6>
+                            <p class="mb-0">
+                                Tienes <strong>{{ clientes_sin_compras }}</strong> clientes sin compras. 
+                                Considera crear campañas de reactivación con descuentos especiales.
+                            </p>
+                        </div>
+                    </div>
+                <div class="col-md-4">
+                    <div class="insight-card">
+                        <div class="insight-icon">
+                            <i class="bi bi-star text-warning"></i>
+                        </div>
+                        <h6>Clientes VIP</h6>
+                        <p class="mb-0">
+                            Los top 10 clientes representan una parte importante de tus ventas. 
+                            Implementa un programa de fidelización para retenerlos.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="insight-card">
+                        <div class="insight-icon">
+                            <i class="bi bi-graph-up text-primary"></i>
+                        </div>
+                        <h6>Valor Promedio</h6>
+                        <p class="mb-0">
+                            El ticket promedio es de <strong>${{ valor_promedio|floatformat:2 }}</strong>. 
+                            Considera estrategias de upselling para aumentar este valor.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/reportes-clientes.js' %}"></script>
+<script>
+    // Datos para el gráfico
+    const condicionIVAData = {
+        labels: [
+            {% for item in clientes_por_iva %}
+            '{{ item.condicion_iva }}',
+            {% endfor %}
+        ],
+        datasets: [{
+            data: [
+                {% for item in clientes_por_iva %}
+                {{ item.cantidad }},
+                {% endfor %}
+            ],
+            backgroundColor: ['#667eea', '#10b981', '#f59e0b', '#ef4444', '#3b82f6']
+        }]
+    };
+    
+    // Inicializar gráfico
+    inicializarGraficoIVA(condicionIVAData);
+</script>
+{% endblock %}

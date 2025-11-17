@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Reporte de Ventas - MotoShop{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/reportes.css' %}">
+{% endblock %}
+{% block content %}
+<!-- Page Header -->
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Reporte de Ventas</h1>
+            <p class="page-subtitle">Análisis detallado de ventas por período</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-modern" style="background: #ef4444; color: white;" onclick="exportarPDF()">
+                <i class="bi bi-file-pdf"></i> Exportar PDF
+            </button>
+            <a href="{% url 'exportar_ventas_excel' %}?desde={{ fecha_desde }}&hasta={{ fecha_hasta }}" class="btn btn-modern" style="background: #10b981; color: white;">
+                <i class="bi bi-file-excel"></i> Exportar Excel
+            </a>
+            <a href="{% url 'reportes' %}" class="btn btn-modern" style="background: #f3f4f6; color: #374151;">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+</div>
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-funnel"></i> Filtros</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small">Fecha Desde</label>
+                <input type="date" name="fecha_desde" class="form-control" value="{{ fecha_desde|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Fecha Hasta</label>
+                <input type="date" name="fecha_hasta" class="form-control" value="{{ fecha_hasta|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Método de Pago</label>
+                <select name="tipo_pago" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="efectivo" {% if tipo_pago == 'efectivo' %}selected{% endif %}>Efectivo</option>
+                    <option value="debito" {% if tipo_pago == 'debito' %}selected{% endif %}>Débito</option>
+                    <option value="credito" {% if tipo_pago == 'credito' %}selected{% endif %}>Crédito</option>
+                    <option value="transferencia" {% if tipo_pago == 'transferencia' %}selected{% endif %}>Transferencia</option>
+                    <option value="mixto" {% if tipo_pago == 'mixto' %}selected{% endif %}>Mixto</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary-modern btn-modern w-100">
+                    <i class="bi bi-search"></i> Aplicar Filtros
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="reporte-stat-card" style="border-left: 4px solid #667eea;">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                <i class="bi bi-currency-dollar"></i>
+            </div>
+            <div class="stat-content">
+                <small class="stat-label">Total Ventas</small>
+                <h3 class="stat-value">${{ total_ventas }}</h3>
+            </div>
+        </div>
+    </div>
+<div class="col-xl-3 col-md-6">
+    <div class="reporte-stat-card" style="border-left: 4px solid #10b981;">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+            <i class="bi bi-receipt"></i>
+        </div>
+        <div class="stat-content">
+            <small class="stat-label">Cantidad de Ventas</small>
+            <h3 class="stat-value">{{ cantidad_ventas }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="col-xl-3 col-md-6">
+    <div class="reporte-stat-card" style="border-left: 4px solid #3b82f6;">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+            <i class="bi bi-calculator"></i>
+        </div>
+        <div class="stat-content">
+            <small class="stat-label">Promedio por Venta</small>
+            <h3 class="stat-value">${{ promedio_venta|floatformat:2 }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="col-xl-3 col-md-6">
+    <div class="reporte-stat-card" style="border-left: 4px solid #f59e0b;">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+            <i class="bi bi-calendar-range"></i>
+        </div>
+        <div class="stat-content">
+            <small class="stat-label">Período</small>
+            <h6 class="stat-value" style="font-size: 16px;">
+                {{ fecha_desde|date:"d/m/Y" }} - {{ fecha_hasta|date:"d/m/Y" }}
+            </h6>
+        </div>
+    </div>
+</div>
+</div>
+<!-- Gráficos -->
+<div class="row g-4 mb-4">
+    <!-- Gráfico de Ventas por Día -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Ventas por Día</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="ventasPorDiaChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+<!-- Gráfico de Métodos de Pago -->
+<div class="col-lg-4">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Por Método de Pago</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="metodosPagoChart"></canvas>
+            
+            <div class="mt-4">
+                <div class="metodo-pago-item">
+                    <div class="d-flex justify-content-between">
+                        <span><i class="bi bi-cash-coin text-success"></i> Efectivo</span>
+                        <strong>${{ ventas_por_metodo.efectivo.total|default:"0" }}</strong>
+                    </div>
+                    <small class="text-muted">{{ ventas_por_metodo.efectivo.cantidad|default:"0" }} ventas</small>
+                </div>
+                
+                <div class="metodo-pago-item">
+                    <div class="d-flex justify-content-between">
+                        <span><i class="bi bi-credit-card text-primary"></i> Débito</span>
+                        <strong>${{ ventas_por_metodo.debito.total|default:"0" }}</strong>
+                    </div>
+                    <small class="text-muted">{{ ventas_por_metodo.debito.cantidad|default:"0" }} ventas</small>
+                </div>
+                
+                <div class="metodo-pago-item">
+                    <div class="d-flex justify-content-between">
+                        <span><i class="bi bi-credit-card-2-front text-info"></i> Crédito</span>
+                        <strong>${{ ventas_por_metodo.credito.total|default:"0" }}</strong>
+                    </div>
+                    <small class="text-muted">{{ ventas_por_metodo.credito.cantidad|default:"0" }} ventas</small>
+                </div>
+                
+                <div class="metodo-pago-item">
+                    <div class="d-flex justify-content-between">
+                        <span><i class="bi bi-arrow-left-right text-warning"></i> Transferencia</span>
+                        <strong>${{ ventas_por_metodo.transferencia.total|default:"0" }}</strong>
+                    </div>
+                    <small class="text-muted">{{ ventas_por_metodo.transferencia.cantidad|default:"0" }} ventas</small>
+                </div>
+                
+                <div class="metodo-pago-item">
+                    <div class="d-flex justify-content-between">
+                        <span><i class="bi bi-wallet2 text-secondary"></i> Mixto</span>
+                        <strong>${{ ventas_por_metodo.mixto.total|default:"0" }}</strong>
+                    </div>
+                    <small class="text-muted">{{ ventas_por_metodo.mixto.cantidad|default:"0" }} ventas</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+<!-- Top 10 Productos -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-trophy"></i> Top 10 Productos Más Vendidos</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>PRODUCTO</th>
+                                <th class="text-center">CANTIDAD</th>
+                                <th class="text-end">TOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for producto in productos_mas_vendidos %}
+                            <tr>
+                                <td><span class="ranking-badge">{{ forloop.counter }}</span></td>
+                                <td>
+                                    <div>{{ producto.producto__descripcion|truncatewords:8 }}</div>
+                                    <small class="text-muted">Código: {{ producto.producto__codigo }}</small>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary">{{ producto.cantidad_vendida }}</span>
+                                </td>
+                                <td class="text-end"><strong>${{ producto.total_vendido }}</strong></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">No hay datos disponibles</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- Top 10 Clientes -->
+<div class="col-lg-6">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-people"></i> Top 10 Clientes</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>CLIENTE</th>
+                            <th class="text-center">COMPRAS</th>
+                            <th class="text-end">TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cliente in clientes_top %}
+                        <tr>
+                            <td><span class="ranking-badge">{{ forloop.counter }}</span></td>
+                            <td>
+                                <div>{{ cliente.cliente__nombre }} {{ cliente.cliente__apellido }}</div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success">{{ cliente.cantidad_compras }}</span>
+                            </td>
+                            <td class="text-end"><strong>${{ cliente.total_comprado }}</strong></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">No hay datos disponibles</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+<!-- Últimas Ventas -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Últimas 50 Ventas del Período</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>CÓDIGO</th>
+                        <th>FECHA</th>
+                        <th>CLIENTE</th>
+                        <th>MÉTODO</th>
+                        <th class="text-end">TOTAL</th>
+                        <th>ESTADO</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for venta in ventas %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'detalle_venta' venta.id %}">
+                                <span class="code-badge">#{{ venta.codigo_venta }}</span>
+                            </a>
+                        </td>
+                        <td>{{ venta.fecha|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            {% if venta.cliente %}
+                                {{ venta.cliente.nombre_completo }}
+                            {% else %}
+                                <span class="text-muted">Consumidor Final</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="venta-metodo {{ venta.tipo_pago }}">
+                                {{ venta.get_tipo_pago_display }}
+                            </span>
+                        </td>
+                        <td class="text-end"><strong>${{ venta.total }}</strong></td>
+                        <td>
+                            <span class="estado-venta {% if venta.estado_venta == 2 %}pagado{% elif venta.estado_venta == 1 %}pendiente{% else %}anulado{% endif %}">
+                                {{ venta.get_estado_venta_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">No hay ventas en este período</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/reportes-ventas.js' %}"></script>
+<script>
+    // Datos para los gráficos
+    const ventasPorDia = {{ ventas_por_dia|safe }};
+    const ventasPorMetodo = {
+        efectivo: {{ ventas_por_metodo.efectivo.total|default:"0" }},
+        debito: {{ ventas_por_metodo.debito.total|default:"0" }},
+        credito: {{ ventas_por_metodo.credito.total|default:"0" }},
+        transferencia: {{ ventas_por_metodo.transferencia.total|default:"0" }},
+        mixto: {{ ventas_por_metodo.mixto.total|default:"0" }}
+    };
+    
+    // Inicializar gráficos
+    inicializarGraficos(ventasPorDia, ventasPorMetodo);
+</script>
+{% endblock %}

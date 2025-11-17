@@ -1,0 +1,242 @@
+/*============================================================
+   ESTILOS PARA MÓDULO DE REPORTES - MOTOSHOP
+   ============================================================ */
+/* ---------- STATS CARDS ---------- */
+.reporte-stat-card {
+background: white;
+border-radius: 16px;
+padding: 24px;
+box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+display: flex;
+align-items: center;
+gap: 20px;
+transition: transform 0.3s, box-shadow 0.3s;
+}
+.reporte-stat-card:hover {
+transform: translateY(-4px);
+box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+}
+.reporte-stat-card .stat-icon {
+width: 64px;
+height: 64px;
+border-radius: 16px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 32px;
+color: white;
+flex-shrink: 0;
+}
+.reporte-stat-card .stat-content {
+flex: 1;
+}
+.reporte-stat-card .stat-label {
+font-size: 13px;
+color: #6b7280;
+font-weight: 500;
+display: block;
+margin-bottom: 8px;
+}
+.reporte-stat-card .stat-value {
+font-size: 32px;
+font-weight: 700;
+color: #1f2937;
+line-height: 1;
+margin: 0;
+}
+/* ---------- RANKING BADGES ---------- */
+.ranking-badge {
+width: 32px;
+height: 32px;
+border-radius: 8px;
+background: linear-gradient(135deg, #667eea, #764ba2);
+color: white;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+font-weight: 700;
+font-size: 14px;
+}
+/* ---------- MÉTODO DE PAGO ITEMS ---------- */
+.metodo-pago-item {
+padding: 12px;
+background: #f9fafb;
+border-radius: 10px;
+margin-bottom: 8px;
+border-left: 3px solid transparent;
+transition: all 0.3s;
+}
+.metodo-pago-item:hover {
+background: #f3f4f6;
+border-left-color: #667eea;
+transform: translateX(4px);
+}
+/* ---------- NIVEL DE STOCK BADGES ---------- */
+.nivel-badge {
+padding: 6px 12px;
+border-radius: 8px;
+font-size: 12px;
+font-weight: 600;
+display: inline-flex;
+align-items: center;
+gap: 5px;
+}
+.nivel-bajo {
+background: rgba(239, 68, 68, 0.1);
+color: #ef4444;
+}
+.nivel-medio {
+background: rgba(245, 158, 11, 0.1);
+color: #f59e0b;
+}
+.nivel-alto {
+background: rgba(16, 185, 129, 0.1);
+color: #10b981;
+}
+/* ---------- USER AVATAR SM ---------- */
+.user-avatar-sm {
+width: 40px;
+height: 40px;
+border-radius: 50%;
+background: linear-gradient(135deg, #667eea, #764ba2);
+color: white;
+display: flex;
+align-items: center;
+justify-content: center;
+font-weight: 700;
+font-size: 14px;
+flex-shrink: 0;
+}
+/* ---------- CONDICIÓN IVA ITEMS ---------- */
+.condicion-iva-item {
+padding: 12px 0;
+}
+.condicion-iva-item:last-child hr {
+display: none;
+}
+/* ---------- MÉTRICAS CARDS ---------- */
+.metrica-card {
+padding: 20px;
+background: #f9fafb;
+border-radius: 12px;
+border: 1px solid #e5e7eb;
+transition: all 0.3s;
+}
+.metrica-card:hover {
+background: white;
+box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.metrica-icon {
+width: 56px;
+height: 56px;
+border-radius: 12px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 24px;
+}
+/* ---------- INSIGHTS CARDS ---------- */
+.insight-card {
+padding: 20px;
+background: #f9fafb;
+border-radius: 12px;
+height: 100%;
+transition: all 0.3s;
+}
+.insight-card:hover {
+background: white;
+box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+transform: translateY(-4px);
+}
+.insight-icon {
+font-size: 32px;
+margin-bottom: 12px;
+}
+.insight-card h6 {
+font-weight: 600;
+color: #1f2937;
+margin-bottom: 8px;
+}
+.insight-card p {
+font-size: 14px;
+color: #6b7280;
+line-height: 1.6;
+}
+/* ---------- CHARTS ---------- */
+canvas {
+max-height: 300px;
+}
+/* ---------- PRINT STYLES ---------- */
+@media print {
+.page-header .btn,
+.card-header .btn,
+.btn-toolbar {
+display: none !important;
+}
+.card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
+.reporte-stat-card {
+    box-shadow: none;
+    border: 1px solid #e5e7eb;
+}
+
+.row {
+    break-inside: avoid;
+}
+}
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 768px) {
+.reporte-stat-card {
+padding: 16px;
+gap: 12px;
+}
+.reporte-stat-card .stat-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+}
+
+.reporte-stat-card .stat-value {
+    font-size: 24px;
+}
+
+.metrica-card {
+    padding: 16px;
+}
+
+.insight-card {
+    padding: 16px;
+}
+}
+/* ---------- ANIMATIONS ---------- */
+@keyframes fadeInUp {
+from {
+opacity: 0;
+transform: translateY(20px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+.card {
+animation: fadeInUp 0.5s ease;
+}
+/* ---------- CUSTOM SCROLLBAR ---------- */
+.table-responsive::-webkit-scrollbar {
+height: 8px;
+}
+.table-responsive::-webkit-scrollbar-track {
+background: #f1f1f1;
+border-radius: 10px;
+}
+.table-responsive::-webkit-scrollbar-thumb {
+background: #667eea;
+border-radius: 10px;
+}
+.table-responsive::-webkit-scrollbar-thumb:hover {
+background: #5568d3;
+}
