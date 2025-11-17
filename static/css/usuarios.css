@@ -1,0 +1,190 @@
+/* ============================================================
+   ESTILOS PARA LA GESTIÓN DE USUARIOS - MOTOSHOP
+   ============================================================ */
+
+/* ---------- USER INFO ---------- */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 17px;
+    text-transform: uppercase;
+}
+
+/* ---------- TEXTS ---------- */
+.user-name {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 14px;
+}
+
+.stats-label {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 8px;
+}
+
+.stats-number {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+/* ---------- ROLE BADGES ---------- */
+.rol-badge {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.rol-superadmin {
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    color: white;
+}
+
+.rol-admin {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.rol-ventas {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.rol-caja {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+/* ---------- STATUS BADGES ---------- */
+.status-badge {
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+.status-active {
+    background: rgba(16, 185, 129, 0.15);
+    color: #059669;
+}
+
+.status-inactive {
+    background: rgba(239, 68, 68, 0.15);
+    color: #e11d48;
+}
+
+/* ---------- CARDS ---------- */
+.mini-stats-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* ---------- ICONS IN CARDS ---------- */
+.stats-icon-mini {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+/* ---------- MODAL ---------- */
+.product-detail-image {
+    width: 90px;
+    height: 90px;
+    margin: auto;
+    background: rgba(0,0,0,0.05);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ---------- TABLE ---------- */
+.modern-table tbody tr:hover {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.modern-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #374151;
+    padding: 12px;
+    font-size: 13px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modern-table td {
+    padding: 12px;
+    vertical-align: middle;
+}
+
+/* ---------- ACTION BUTTONS ---------- */
+.action-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.btn-action {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.15s ease all;
+}
+
+.btn-action:hover {
+    transform: scale(1.08);
+    filter: brightness(1.15);
+}
+
+.btn-action-view {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+}
+
+.btn-action-edit {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.btn-action-delete {
+    background: rgba(239, 68, 68, 0.15);
+    color: #e11d48;
+}
+
+/* ---------- EMPTY STATE ---------- */
+.empty-state {
+    text-align: center;
+    color: #6b7280;
+}
+
+.empty-state i {
+    font-size: 42px;
+    color: #9ca3af;
+}

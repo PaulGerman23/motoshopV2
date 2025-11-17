@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Usuarios - MotoShop{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Gestión de Usuarios</h1>
+            <p class="page-subtitle">Administra los usuarios y sus permisos</p>
+        </div>
+        <a href="{% url 'crear_usuario' %}" class="btn btn-primary-modern btn-modern">
+            <i class="bi bi-person-plus"></i>
+            Nuevo Usuario
+        </a>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+
+    <div class="col-xl-3 col-md-6">
+        <div class="mini-stats-card" style="border-left: 4px solid #667eea;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="stats-label">Total Usuarios</p>
+                    <h3 class="stats-number">{{ total_usuarios }}</h3>
+                </div>
+                <div class="stats-icon-mini" style="background: rgba(102, 126, 234, 0.1); color: #667eea;">
+                    <i class="bi bi-people"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="mini-stats-card" style="border-left: 4px solid #10b981;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="stats-label">Usuarios Activos</p>
+                    <h3 class="stats-number">{{ usuarios_activos }}</h3>
+                </div>
+                <div class="stats-icon-mini" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                    <i class="bi bi-person-check"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="mini-stats-card" style="border-left: 4px solid #3b82f6;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="stats-label">Administradores</p>
+                    <h3 class="stats-number">{{ usuarios|length }}</h3>
+                </div>
+                <div class="stats-icon-mini" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="mini-stats-card" style="border-left: 4px solid #f59e0b;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="stats-label">Roles Configurados</p>
+                    <h3 class="stats-number">4</h3>
+                </div>
+                <div class="stats-icon-mini" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                    <i class="bi bi-diagram-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Tabla de Usuarios -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+
+            <table class="modern-table" id="tablaUsuarios">
+
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" class="form-check-input"></th>
+                        <th>USUARIO</th>
+                        <th>DNI</th>
+                        <th>EMAIL</th>
+                        <th>TELÉFONO</th>
+                        <th>ROL</th>
+                        <th>ESTADO</th>
+                        <th>ACCIONES</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for usuario_ext in usuarios %}
+
+                    <tr data-usuario-id="{{ usuario_ext.id }}">
+
+                        <td><input type="checkbox" class="form-check-input"></td>
+
+                        <!-- Usuario + Avatar -->
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar">
+                                    {{ usuario_ext.user.first_name|default:"?"|first }}{{ usuario_ext.user.last_name|default:"?"|first }}
+                                </div>
+                                <div>
+                                    <div class="user-name">{{ usuario_ext.nombre_completo }}</div>
+                                    <small class="text-muted">@{{ usuario_ext.user.username }}</small>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td><span class="text-monospace">{{ usuario_ext.dni }}</span></td>
+
+                        <td>
+                            {% if usuario_ext.user.email %}
+                                <small>{{ usuario_ext.user.email }}</small>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if usuario_ext.phone %}
+                                <small>{{ usuario_ext.phone }}</small>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if usuario_ext.rol %}
+                                <span class="rol-badge rol-{{ usuario_ext.rol.tipo }}">
+                                    {{ usuario_ext.rol.get_tipo_display }}
+                                </span>
+                            {% else %}
+                                <span class="badge-modern" style="background:#f3f4f6;color:#6b7280">Sin rol</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if usuario_ext.status == 1 and usuario_ext.user.is_active %}
+                                <span class="status-badge status-active">Activo</span>
+                            {% else %}
+                                <span class="status-badge status-inactive">Inactivo</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div class="action-buttons">
+
+                                <!-- VER DETALLE -->
+                                <button 
+                                    class="btn-action btn-action-view"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalUsuario"
+                                    data-id="{{ usuario_ext.id }}">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+
+                                <!-- EDITAR -->
+                                <a href="{% url 'editar_usuario' usuario_ext.id %}" class="btn-action btn-action-edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+
+                                <!-- ELIMINAR -->
+                                {% if usuario_ext.user.id != request.user.id %}
+                                <button 
+                                    class="btn-action btn-action-delete"
+                                    data-id="{{ usuario_ext.id }}"
+                                    data-nombre="{{ usuario_ext.nombre_completo|escapejs }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                {% endif %}
+
+                            </div>
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="bi bi-people"></i>
+                                <p>No hay usuarios registrados</p>
+                                <a href="{% url 'crear_usuario' %}" class="btn btn-primary-modern btn-modern mt-3">
+                                    <i class="bi bi-person-plus"></i>
+                                    Crear Primer Usuario
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalle Usuario -->
+<div class="modal fade" id="modalUsuario" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Detalle del Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalUsuarioBody">
+                <!-- Se rellena con JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Eliminar -->
+<div class="modal fade" id="modalEliminar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body text-center py-4">
+                <div class="delete-icon mb-3"><i class="bi bi-exclamation-triangle"></i></div>
+                <h6>¿Estás seguro de eliminar este usuario?</h6>
+                <p class="text-muted" id="usuarioEliminarNombre"></p>
+            </div>
+
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+
+                <form id="formEliminar" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Eliminar Usuario
+                    </button>
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/usuarios.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/usuarios.js' %}"></script>
+{% endblock %}
