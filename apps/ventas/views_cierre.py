@@ -1,4 +1,4 @@
-# apps/ventas/views_cierre.py - ACTUALIZADO Y CORREGIDO
+# apps/ventas/views_cierre.py - ACTUALIZADO CON TURNOS
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -6,11 +6,11 @@ from django.contrib import messages
 from django.db import transaction
 from django.db.models import Sum, Count
 from django.utils import timezone
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from decimal import Decimal
-
+from django.db import models
 from .models import CierreCaja, Venta
-
+from django.contrib.auth.models import User
 
 @login_required
 def lista_cierres(request):
@@ -31,12 +31,13 @@ def lista_cierres(request):
 
 @login_required
 def crear_cierre(request):
-    """Crea un nuevo cierre de caja"""
+    """Crea un nuevo cierre de caja para el turno actual"""
     hoy = timezone.now().date()
+    turno_actual = CierreCaja.determinar_turno_actual()
     
-    # Verificar si ya existe un cierre para hoy
-    if CierreCaja.objects.filter(fecha=hoy, usuario=request.user).exists():
-        messages.warning(request, 'Ya existe un cierre de caja para el día de hoy')
+    # Verificar si ya existe un cierre para este turno
+    if CierreCaja.objects.filter(fecha=hoy, turno=turno_actual).exists():
+        messages.warning(request, f'Ya existe un cierre de caja para el turno {dict(CierreCaja.TURNOS)[turno_actual]} de hoy')
         return redirect('lista_cierres')
     
     if request.method == 'POST':
@@ -51,6 +52,7 @@ def crear_cierre(request):
                 # Crear cierre
                 cierre = CierreCaja.objects.create(
                     fecha=hoy,
+                    turno=turno_actual,
                     usuario=request.user,
                     monto_inicial=monto_inicial,
                     monto_final_real=monto_final_real,
@@ -62,27 +64,38 @@ def crear_cierre(request):
                 # Calcular totales automáticamente
                 cierre.calcular_totales()
                 
-                messages.success(request, 'Cierre de caja creado exitosamente')
+                messages.success(request, f'Cierre de caja del turno {cierre.get_turno_display()} creado exitosamente')
                 return redirect('detalle_cierre', cierre_id=cierre.id)
                 
         except Exception as e:
             messages.error(request, f'Error al crear el cierre: {str(e)}')
     
-    # Calcular datos previos para mostrar en el formulario
-    ventas_hoy = Venta.objects.filter(
-        fecha__date=hoy,
+    # Obtener datos previos del turno
+    hora_inicio, hora_fin = CierreCaja.obtener_rango_horario_turno(turno_actual)
+    
+    if turno_actual == 'noche' and hora_inicio > hora_fin:
+        datetime_inicio = datetime.combine(hoy, hora_inicio)
+        datetime_fin = datetime.combine(hoy + timedelta(days=1), hora_fin)
+    else:
+        datetime_inicio = datetime.combine(hoy, hora_inicio)
+        datetime_fin = datetime.combine(hoy, hora_fin)
+    
+    ventas_turno = Venta.objects.filter(
+        fecha__gte=datetime_inicio,
+        fecha__lt=datetime_fin,
         estado_venta=2
     )
     
     context = {
         'fecha': hoy,
-        'total_ventas_previo': ventas_hoy.aggregate(Sum('total'))['total__sum'] or 0,
-        'cantidad_ventas_previo': ventas_hoy.count(),
-        'efectivo_ventas_previo': ventas_hoy.filter(tipo_pago='efectivo').aggregate(Sum('total'))['total__sum'] or 0,
+        'turno_actual': turno_actual,
+        'turno_nombre': dict(CierreCaja.TURNOS)[turno_actual],
+        'total_ventas_previo': ventas_turno.aggregate(Sum('total'))['total__sum'] or 0,
+        'cantidad_ventas_previo': ventas_turno.count(),
+        'efectivo_ventas_previo': ventas_turno.filter(tipo_pago='efectivo').aggregate(Sum('total'))['total__sum'] or 0,
     }
     
     return render(request, 'ventas/crear_cierre.html', context)
-
 
 @login_required
 def detalle_cierre(request, cierre_id):
@@ -102,35 +115,56 @@ def detalle_cierre(request, cierre_id):
     
     return render(request, 'ventas/detalle_cierre.html', context)
 
-
 @login_required
 def caja_actual(request):
-    """Muestra el estado actual de la caja del día"""
+    """Muestra el estado actual de la caja según el turno"""
     hoy = timezone.now().date()
+    turno_actual = CierreCaja.determinar_turno_actual()
     
-    # Buscar cierre del día
-    cierre = CierreCaja.objects.filter(fecha=hoy, usuario=request.user).first()
+    # Buscar cierre del turno actual
+    cierre = CierreCaja.objects.filter(fecha=hoy, turno=turno_actual).first()
     
-    # Calcular ventas del día
-    ventas_hoy = Venta.objects.filter(
-        fecha__date=hoy,
+    # Obtener rango horario del turno
+    hora_inicio, hora_fin = CierreCaja.obtener_rango_horario_turno(turno_actual)
+    
+    # Crear datetime para filtrar ventas
+    if turno_actual == 'noche' and hora_inicio > hora_fin:
+        datetime_inicio = datetime.combine(hoy, hora_inicio)
+        datetime_fin = datetime.combine(hoy + timedelta(days=1), hora_fin)
+    else:
+        datetime_inicio = datetime.combine(hoy, hora_inicio)
+        datetime_fin = datetime.combine(hoy, hora_fin)
+    
+    # Calcular ventas del turno
+    ventas_turno = Venta.objects.filter(
+        fecha__gte=datetime_inicio,
+        fecha__lt=datetime_fin,
         estado_venta=2
     )
     
-    total_ventas = ventas_hoy.aggregate(Sum('total'))['total__sum'] or Decimal('0')
-    cantidad_ventas = ventas_hoy.count()
+    total_ventas = ventas_turno.aggregate(Sum('total'))['total__sum'] or Decimal('0')
+    cantidad_ventas = ventas_turno.count()
     
     # Desglose por método de pago
-    efectivo = ventas_hoy.filter(tipo_pago='efectivo').aggregate(Sum('total'))['total__sum'] or Decimal('0')
-    debito = ventas_hoy.filter(tipo_pago='debito').aggregate(Sum('total'))['total__sum'] or Decimal('0')
-    credito = ventas_hoy.filter(tipo_pago='credito').aggregate(Sum('total'))['total__sum'] or Decimal('0')
-    transferencia = ventas_hoy.filter(tipo_pago='transferencia').aggregate(Sum('total'))['total__sum'] or Decimal('0')
+    efectivo = ventas_turno.filter(tipo_pago='efectivo').aggregate(Sum('total'))['total__sum'] or Decimal('0')
+    debito = ventas_turno.filter(tipo_pago='debito').aggregate(Sum('total'))['total__sum'] or Decimal('0')
+    credito = ventas_turno.filter(tipo_pago='credito').aggregate(Sum('total'))['total__sum'] or Decimal('0')
+    transferencia = ventas_turno.filter(tipo_pago='transferencia').aggregate(Sum('total'))['total__sum'] or Decimal('0')
     
-    # Ventas recientes (últimas 10)
-    ventas_recientes = ventas_hoy.select_related('cliente', 'usuario').order_by('-fecha')[:10]
+    # Ventas recientes del turno
+    ventas_recientes = ventas_turno.select_related('cliente', 'usuario').order_by('-fecha')[:10]
+    
+    # Información del turno
+    turnos_info = {
+        'manana': 'Mañana (06:00 - 14:00)',
+        'tarde': 'Tarde (14:00 - 22:00)',
+        'noche': 'Noche (22:00 - 06:00)'
+    }
     
     context = {
         'fecha': hoy,
+        'turno_actual': turno_actual,
+        'turno_nombre': turnos_info[turno_actual],
         'cierre': cierre,
         'total_ventas': total_ventas,
         'cantidad_ventas': cantidad_ventas,
@@ -143,7 +177,6 @@ def caja_actual(request):
     }
     
     return render(request, 'ventas/caja_actual.html', context)
-
 
 @login_required
 def recalcular_cierre(request, cierre_id):

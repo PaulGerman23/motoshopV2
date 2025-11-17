@@ -7,6 +7,8 @@ from apps.clientes.models import Cliente
 from apps.inventario.models import Producto
 from decimal import Decimal
 from datetime import timedelta
+from datetime import time
+
 
 
 class Venta(models.Model):
@@ -158,7 +160,19 @@ class DetalleTicket(models.Model):
 
 
 class CierreCaja(models.Model):
+    TURNOS = [
+        ('manana', 'Mañana'),
+        ('tarde', 'Tarde'),
+        ('noche', 'Noche'),
+    ]
+    
     fecha = models.DateField(db_index=True)
+    turno = models.CharField(
+        max_length=10, 
+        choices=TURNOS, 
+        default='manana',
+        help_text='Turno del cierre: Mañana (06:00-14:00), Tarde (14:00-22:00), Noche (22:00-06:00)'
+    )
     usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     
     monto_inicial = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -183,25 +197,77 @@ class CierreCaja(models.Model):
     
     class Meta:
         db_table = 'cierres_caja'
-        unique_together = ('fecha', 'usuario')
+        unique_together = ('fecha', 'turno')  # CAMBIO: ahora por fecha y turno
+        verbose_name = 'Cierre de Caja'
+        verbose_name_plural = 'Cierres de Caja'
+
+    def __str__(self):
+        return f"Cierre {self.get_turno_display()} - {self.fecha}"
+
+    @staticmethod
+    def determinar_turno_actual():
+        """Determina el turno según la hora actual"""
+        hora_actual = timezone.now().time()
+        
+        if time(6, 0) <= hora_actual < time(14, 0):
+            return 'manana'
+        elif time(14, 0) <= hora_actual < time(22, 0):
+            return 'tarde'
+        else:  # 22:00 - 06:00
+            return 'noche'
+    
+    @staticmethod
+    def obtener_rango_horario_turno(turno):
+        """Retorna el rango horario de un turno"""
+        rangos = {
+            'manana': (time(6, 0), time(14, 0)),
+            'tarde': (time(14, 0), time(22, 0)),
+            'noche': (time(22, 0), time(6, 0))
+        }
+        return rangos.get(turno, (time(0, 0), time(23, 59)))
 
     def calcular_totales(self):
+        """Calcula los totales considerando el turno"""
         from django.db.models import Sum
-        ventas_dia = Venta.objects.filter(fecha__date=self.fecha, estado_venta=2)
+        from datetime import datetime, timedelta
         
-        self.total_ventas = ventas_dia.aggregate(Sum('total'))['total__sum'] or 0
-        self.cantidad_ventas = ventas_dia.count()
+        # Obtener rango horario del turno
+        hora_inicio, hora_fin = self.obtener_rango_horario_turno(self.turno)
         
-        self.efectivo_ventas = ventas_dia.filter(tipo_pago='efectivo').aggregate(Sum('total'))['total__sum'] or 0
-        self.debito_ventas = ventas_dia.filter(tipo_pago='debito').aggregate(Sum('total'))['total__sum'] or 0
-        self.credito_ventas = ventas_dia.filter(tipo_pago='credito').aggregate(Sum('total'))['total__sum'] or 0
-        self.transferencia_ventas = ventas_dia.filter(tipo_pago='transferencia').aggregate(Sum('total'))['total__sum'] or 0
+        # Crear datetime para el inicio y fin del turno
+        if self.turno == 'noche':
+            # El turno noche cruza la medianoche
+            if hora_inicio > hora_fin:
+                # Desde las 22:00 del día hasta las 06:00 del día siguiente
+                datetime_inicio = datetime.combine(self.fecha, hora_inicio)
+                datetime_fin = datetime.combine(self.fecha + timedelta(days=1), hora_fin)
+            else:
+                datetime_inicio = datetime.combine(self.fecha, hora_inicio)
+                datetime_fin = datetime.combine(self.fecha, hora_fin)
+        else:
+            datetime_inicio = datetime.combine(self.fecha, hora_inicio)
+            datetime_fin = datetime.combine(self.fecha, hora_fin)
+        
+        # Filtrar ventas por rango horario
+        from .models import Venta
+        ventas_turno = Venta.objects.filter(
+            fecha__gte=datetime_inicio,
+            fecha__lt=datetime_fin,
+            estado_venta=2
+        )
+        
+        self.total_ventas = ventas_turno.aggregate(Sum('total'))['total__sum'] or 0
+        self.cantidad_ventas = ventas_turno.count()
+        
+        self.efectivo_ventas = ventas_turno.filter(tipo_pago='efectivo').aggregate(Sum('total'))['total__sum'] or 0
+        self.debito_ventas = ventas_turno.filter(tipo_pago='debito').aggregate(Sum('total'))['total__sum'] or 0
+        self.credito_ventas = ventas_turno.filter(tipo_pago='credito').aggregate(Sum('total'))['total__sum'] or 0
+        self.transferencia_ventas = ventas_turno.filter(tipo_pago='transferencia').aggregate(Sum('total'))['total__sum'] or 0
         
         self.monto_final_esperado = self.monto_inicial + self.efectivo_ventas - self.egresos
         self.diferencia = self.monto_final_real - self.monto_final_esperado
         
         self.save()
-
 
 # ================================================
 # MODELOS PARA DEVOLUCIONES Y NOTAS DE CRÉDITO

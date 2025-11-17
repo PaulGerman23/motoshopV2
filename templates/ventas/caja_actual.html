@@ -8,13 +8,13 @@
 <div class="page-header mb-4">
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h1 class="page-title">Caja Actual</h1>
-            <p class="page-subtitle">Estado de caja del día {{ fecha|date:"d/m/Y" }}</p>
+            <h1 class="page-title">Caja Actual - Turno {{ turno_nombre }}</h1>
+            <p class="page-subtitle">{{ fecha|date:"d/m/Y" }}</p>
         </div>
         <div class="d-flex gap-2">
             {% if not tiene_cierre %}
             <a href="{% url 'crear_cierre' %}" class="btn btn-primary-modern btn-modern">
-                <i class="bi bi-lock"></i> Cerrar Caja
+                <i class="bi bi-lock"></i> Cerrar Caja (Turno {{ turno_nombre|title }})
             </a>
             {% else %}
             <a href="{% url 'detalle_cierre' cierre.id %}" class="btn btn-modern" style="background: #3b82f6; color: white;">
@@ -140,10 +140,10 @@
             </div>
         </div>
 
-        <!-- Ventas Recientes -->
+        <!-- Ventas Recientes del Turno -->
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Últimas 10 Ventas</h5>
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Últimas Ventas del Turno {{ turno_nombre }}</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -185,7 +185,7 @@
                             {% empty %}
                             <tr>
                                 <td colspan="6" class="text-center py-4 text-muted">
-                                    No hay ventas registradas hoy
+                                    No hay ventas registradas en este turno
                                 </td>
                             </tr>
                             {% endfor %}
@@ -198,7 +198,7 @@
 
     <!-- Sidebar -->
     <div class="col-lg-4">
-        <!-- Estado de Caja -->
+        <!-- Estado de Caja Card ACTUALIZADO -->
         <div class="card mb-4">
             <div class="card-header" style="background: #1f2937; color: white;">
                 <h5 class="mb-0"><i class="bi bi-info-circle"></i> Estado de Caja</h5>
@@ -208,8 +208,8 @@
                     <div class="alert alert-success d-flex align-items-start">
                         <i class="bi bi-check-circle-fill me-2 mt-1"></i>
                         <div>
-                            <strong>Caja Cerrada</strong><br>
-                            <small>El cierre de caja ya fue realizado.</small>
+                            <strong>Caja Cerrada (Turno {{ cierre.get_turno_display }})</strong><br>
+                            <small>El cierre de caja para este turno ya fue realizado a las {{ cierre.fecha_cierre|date:"H:i" }}.</small>
                         </div>
                     </div>
                     <a href="{% url 'detalle_cierre' cierre.id %}" class="btn btn-primary-modern btn-modern w-100">
@@ -219,12 +219,12 @@
                     <div class="alert alert-warning d-flex align-items-start">
                         <i class="bi bi-exclamation-triangle me-2 mt-1"></i>
                         <div>
-                            <strong>Caja Abierta</strong><br>
-                            <small>Recuerda cerrar la caja al finalizar el día.</small>
+                            <strong>Caja Abierta - Turno {{ turno_nombre }}</strong><br>
+                            <small>Recuerda cerrar la caja al finalizar tu turno.</small>
                         </div>
                     </div>
                     <a href="{% url 'crear_cierre' %}" class="btn btn-primary-modern btn-modern w-100">
-                        <i class="bi bi-lock"></i> Realizar Cierre de Caja
+                        <i class="bi bi-lock"></i> Realizar Cierre de Turno
                     </a>
                 {% endif %}
             </div>
