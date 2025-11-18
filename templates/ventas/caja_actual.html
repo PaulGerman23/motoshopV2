@@ -210,6 +210,7 @@
                         <div>
                             <strong>Caja Cerrada (Turno {{ cierre.get_turno_display }})</strong><br>
                             <small>El cierre de caja para este turno ya fue realizado a las {{ cierre.fecha_cierre|date:"H:i" }}.</small>
+
                         </div>
                     </div>
                     <a href="{% url 'detalle_cierre' cierre.id %}" class="btn btn-primary-modern btn-modern w-100">
