@@ -40,6 +40,14 @@ urlpatterns = [
     # Auditoría
     path('auditoria/', views_devolucion.auditoria_movimientos, name='auditoria_movimientos'),
     
+    # Cierre de caja
+    path('cierres/', views_cierre.lista_cierres, name='lista_cierres'),
+    path('cierres/crear/', views_cierre.crear_cierre, name='crear_cierre'),
+    path('cierres/<int:cierre_id>/', views_cierre.detalle_cierre, name='detalle_cierre'),
+    path('cierres/<int:cierre_id>/recalcular/', views_cierre.recalcular_cierre, name='recalcular_cierre'),
+    path('cierres/sin-actividad/', views_cierre.registrar_cierre_sin_actividad, name='cierre_sin_actividad'),  # ← NUEVA LÍNEA
+    path('caja-actual/', views_cierre.caja_actual, name='caja_actual'),
+    
     # Exportaciones
     path('exportar/venta/<int:venta_id>/pdf/', views_exportacion.exportar_venta_pdf, name='exportar_venta_pdf'),
     path('exportar/ventas/excel/', views_exportacion.exportar_ventas_excel, name='exportar_ventas_excel'),

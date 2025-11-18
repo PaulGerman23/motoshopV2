@@ -284,7 +284,31 @@ class CierreCaja(models.Model):
             return 'tarde'
         else:
             return 'noche'
-
+    @classmethod
+    def crear_sin_actividad(cls, fecha, turno, usuario):
+        """
+        Crea un cierre de caja sin actividad (sin ventas).
+        Todos los montos en 0.
+        """
+        cierre = cls.objects.create(
+            fecha=fecha,
+            turno=turno,
+            usuario=usuario,
+            monto_inicial=0,
+            total_ventas=0,
+            cantidad_ventas=0,
+            efectivo_ventas=0,
+            debito_ventas=0,
+            credito_ventas=0,
+            transferencia_ventas=0,
+            egresos=0,
+            detalle_egresos='',
+            monto_final_esperado=0,
+            monto_final_real=0,
+            diferencia=0,
+            observaciones='Cierre sin actividad'
+        )
+        return cierre
     # CORREGIDO
     @staticmethod
     def obtener_rango_horario_turno(turno):

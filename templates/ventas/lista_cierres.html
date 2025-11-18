@@ -60,11 +60,18 @@
 <div class="row g-4">
     {% for cierre in cierres %}
     <div class="col-lg-6">
-        <div class="card cierre-card">
+        <div class="card cierre-card {% if cierre.observaciones == 'Cierre sin actividad' %}cierre-sin-actividad{% endif %}">
             <div class="cierre-header">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <h5 class="mb-1">Cierre del {{ cierre.fecha|date:"d/m/Y" }}</h5>
+                        <h5 class="mb-1">
+                            Cierre del {{ cierre.fecha|date:"d/m/Y" }} - Turno {{ cierre.get_turno_display }}
+                            {% if cierre.observaciones == "Cierre sin actividad" %}
+                                <span class="badge" style="background: rgba(255,255,255,0.3); font-size: 11px; margin-left: 8px;">
+                                    <i class="bi bi-dash-circle"></i> Sin Actividad
+                                </span>
+                            {% endif %}
+                        </h5>
                         <p class="mb-0" style="opacity: 0.9;">
                             <i class="bi bi-person"></i> {{ cierre.usuario.get_full_name }}
                         </p>

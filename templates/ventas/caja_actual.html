@@ -198,7 +198,7 @@
 
     <!-- Sidebar -->
     <div class="col-lg-4">
-        <!-- Estado de Caja Card ACTUALIZADO -->
+        <!-- Estado de Caja Card -->        
         <div class="card mb-4">
             <div class="card-header" style="background: #1f2937; color: white;">
                 <h5 class="mb-0"><i class="bi bi-info-circle"></i> Estado de Caja</h5>
@@ -210,9 +210,16 @@
                         <div>
                             <strong>Caja Cerrada (Turno {{ cierre.get_turno_display }})</strong><br>
                             <small>El cierre de caja para este turno ya fue realizado a las {{ cierre.fecha_cierre|date:"H:i" }}.</small>
-
                         </div>
                     </div>
+                    
+                    {% if cierre.observaciones == "Cierre sin actividad" %}
+                        <div class="alert alert-info d-flex align-items-start mt-2">
+                            <i class="bi bi-info-circle me-2 mt-1"></i>
+                            <small><strong>Este turno no tuvo actividad comercial.</strong></small>
+                        </div>
+                    {% endif %}
+                    
                     <a href="{% url 'detalle_cierre' cierre.id %}" class="btn btn-primary-modern btn-modern w-100">
                         <i class="bi bi-file-text"></i> Ver Detalles del Cierre
                     </a>
@@ -224,9 +231,33 @@
                             <small>Recuerda cerrar la caja al finalizar tu turno.</small>
                         </div>
                     </div>
-                    <a href="{% url 'crear_cierre' %}" class="btn btn-primary-modern btn-modern w-100">
-                        <i class="bi bi-lock"></i> Realizar Cierre de Turno
-                    </a>
+                    
+                    {% if cantidad_ventas > 0 %}
+                        <a href="{% url 'crear_cierre' %}" class="btn btn-primary-modern btn-modern w-100">
+                            <i class="bi bi-lock"></i> Realizar Cierre de Turno
+                        </a>
+                    {% else %}
+                        <div class="alert alert-info d-flex align-items-start mt-3">
+                            <i class="bi bi-info-circle me-2 mt-1"></i>
+                            <small>
+                                <strong>No hay ventas registradas en este turno.</strong><br>
+                                Puedes registrar un cierre sin actividad o esperar a realizar ventas.
+                            </small>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <form method="post" action="{% url 'cierre_sin_actividad' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-modern w-100" style="background: #6b7280; color: white;">
+                                    <i class="bi bi-x-circle"></i> Registrar Cierre sin Actividad
+                                </button>
+                            </form>
+                            
+                            <a href="{% url 'crear_venta' %}" class="btn btn-modern w-100" style="background: #10b981; color: white;">
+                                <i class="bi bi-plus-circle"></i> Realizar Primera Venta
+                            </a>
+                        </div>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>

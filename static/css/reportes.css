@@ -240,3 +240,46 @@ border-radius: 10px;
 .table-responsive::-webkit-scrollbar-thumb:hover {
 background: #5568d3;
 }
+/* Estilos para cierres sin actividad */
+.cierre-sin-actividad {
+    opacity: 0.85;
+    border-left: 4px solid #6b7280 !important;
+}
+
+.cierre-sin-actividad .cierre-header {
+    background: linear-gradient(135deg, #6b7280, #4b5563) !important;
+}
+
+.badge-sin-actividad {
+    background: rgba(107, 114, 128, 0.2);
+    color: #374151;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+/* Alerta para turnos sin actividad */
+.alert-turno-sin-actividad {
+    background: #f3f4f6;
+    border-left: 4px solid #6b7280;
+    color: #1f2937;
+}
+
+.alert-turno-sin-actividad i {
+    color: #6b7280;
+}
+
+/* Botón especial para cierre sin actividad */
+.btn-cierre-sin-actividad {
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+    color: white;
+    border: none;
+    transition: all 0.3s;
+}
+
+.btn-cierre-sin-actividad:hover {
+    background: linear-gradient(135deg, #4b5563, #374151);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+}

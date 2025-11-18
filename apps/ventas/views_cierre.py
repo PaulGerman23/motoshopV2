@@ -80,6 +80,22 @@ def crear_cierre(request):
         estado_venta=2
     )
 
+    # ================================================
+    # VALIDACIÓN NUEVA — SOLO SE AGREGA ESTO
+    # ================================================
+    if ventas_turno.count() == 0:
+        context = {
+            'fecha': hoy,
+            'turno_actual': turno_actual,
+            'turno_nombre': dict(CierreCaja.TURNOS)[turno_actual],
+            'cantidad_ventas_previo': 0,
+            'total_ventas_previo': 0,
+            'efectivo_ventas_previo': 0,
+        }
+        return render(request, 'ventas/crear_cierre.html', context)
+    # ================================================
+
+
     context = {
         'fecha': hoy,
         'turno_actual': turno_actual,
@@ -210,8 +226,42 @@ def _obtener_rango_datetime_turno(fecha, turno, hora_inicio, hora_fin):
         datetime_inicio = datetime.combine(fecha, hora_inicio)
         datetime_fin = datetime.combine(fecha, hora_fin)
 
-    # Convertir a aware usando zoneinfo (NO localize!)
+    # Convertir a aware usando zoneinfo
     datetime_inicio = datetime_inicio.replace(tzinfo=zona)
     datetime_fin = datetime_fin.replace(tzinfo=zona)
 
     return datetime_inicio, datetime_fin
+
+
+@login_required
+def registrar_cierre_sin_actividad(request):
+    """
+    Crea un cierre de caja sin actividad cuando no hubo ventas en el turno.
+    """
+    if request.method == 'POST':
+        try:
+            from django.utils import timezone
+            
+            hoy = timezone.localtime().date()
+            turno_actual = CierreCaja.determinar_turno_actual()
+            
+            # Verificar que no exista ya un cierre
+            if CierreCaja.objects.filter(fecha=hoy, turno=turno_actual).exists():
+                messages.warning(request, 'Ya existe un cierre para este turno.')
+                return redirect('caja_actual')
+            
+            # Crear cierre sin actividad
+            cierre = CierreCaja.crear_sin_actividad(
+                fecha=hoy,
+                turno=turno_actual,
+                usuario=request.user
+            )
+            
+            messages.success(request, f'Cierre sin actividad registrado correctamente para el turno {dict(CierreCaja.TURNOS)[turno_actual]}.')
+            return redirect('detalle_cierre', cierre_id=cierre.id)
+            
+        except Exception as e:
+            messages.error(request, f'Error al registrar el cierre: {str(e)}')
+            return redirect('caja_actual')
+    
+    return redirect('caja_actual')

@@ -7,7 +7,7 @@
 <div class="page-header mb-4">
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h1 class="page-title">Cerrar Caja del Día</h1>
+            <h1 class="page-title">Cerrar Caja - Turno {{ turno_nombre }}</h1>
             <p class="page-subtitle">{{ fecha|date:"d/m/Y" }}</p>
         </div>
         <a href="{% url 'caja_actual' %}" class="btn btn-modern" style="background: #f3f4f6; color: #374151;">
@@ -21,7 +21,7 @@
         <!-- Resumen Previo -->
         <div class="card mb-4">
             <div class="card-header" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
-                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Resumen del Día</h5>
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Resumen del Turno {{ turno_nombre }}</h5>
             </div>
             <div class="card-body">
                 <div class="row g-3 text-center">
@@ -29,7 +29,7 @@
                         <div class="p-3" style="background: #f9fafb; border-radius: 12px;">
                             <i class="bi bi-receipt" style="font-size: 32px; color: #667eea;"></i>
                             <h4 class="mt-2 mb-0">{{ cantidad_ventas_previo }}</h4>
-                            <small class="text-muted">Ventas del día</small>
+                            <small class="text-muted">Ventas del turno</small>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -56,115 +56,155 @@
                 <h5 class="mb-0"><i class="bi bi-calculator"></i> Datos del Cierre</h5>
             </div>
             <div class="card-body">
-                <form method="post">
-                    {% csrf_token %}
-
-                    <div class="alert alert-info d-flex align-items-start mb-4">
-                        <i class="bi bi-info-circle me-2 mt-1"></i>
-                        <small>
-                            <strong>Importante:</strong> Verifica que los montos sean correctos antes de cerrar la caja. 
-                            Una vez cerrada, no se podrá modificar (solo recalcular).
-                        </small>
-                    </div>
-
-                    <!-- Monto Inicial -->
-                    <div class="mb-4">
-                        <label class="form-label">Monto Inicial de Caja *</label>
-                        <div class="input-group input-group-lg">
-                            <span class="input-group-text">$</span>
-                            <input type="number" class="form-control" name="monto_inicial" step="0.01" min="0" 
-                                   placeholder="0.00" required id="inputMontoInicial">
-                        </div>
-                        <small class="text-muted">Monto con el que se inició el día</small>
-                    </div>
-
-                    <!-- Egresos -->
-                    <div class="mb-4">
-                        <label class="form-label">Egresos del Día</label>
-                        <div class="input-group input-group-lg">
-                            <span class="input-group-text">$</span>
-                            <input type="number" class="form-control" name="egresos" step="0.01" min="0" 
-                                   value="0" id="inputEgresos">
-                        </div>
-                        <small class="text-muted">Gastos, retiros, etc.</small>
-                    </div>
-
-                    <!-- Detalle Egresos -->
-                    <div class="mb-4">
-                        <label class="form-label">Detalle de Egresos</label>
-                        <textarea class="form-control" name="detalle_egresos" rows="3" 
-                                  placeholder="Describe los egresos realizados..."></textarea>
-                    </div>
-
-                    <!-- Monto Final Real -->
-                    <div class="mb-4">
-                        <label class="form-label">Monto Final Real en Caja *</label>
-                        <div class="input-group input-group-lg">
-                            <span class="input-group-text">$</span>
-                            <input type="number" class="form-control" name="monto_final_real" step="0.01" min="0" 
-                                   placeholder="0.00" required id="inputMontoFinal">
-                        </div>
-                        <small class="text-muted">Monto total contado al final del día</small>
-                    </div>
-
-                    <!-- Observaciones -->
-                    <div class="mb-4">
-                        <label class="form-label">Observaciones</label>
-                        <textarea class="form-control" name="observaciones" rows="3" 
-                                  placeholder="Notas adicionales sobre el cierre..."></textarea>
-                    </div>
-
-                    <!-- Preview de Cálculos -->
-                    <div class="card mb-4" style="background: linear-gradient(135deg, #f9fafb, #ffffff); border: 2px solid #e5e7eb;">
-                        <div class="card-body">
-                            <h6 class="mb-3"><i class="bi bi-calculator"></i> Vista Previa</h6>
-                            
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Monto Inicial:</span>
-                                <strong id="previewInicial">$0.00</strong>
-                            </div>
-                            
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Efectivo de Ventas:</span>
-                                <strong class="text-success">${{ efectivo_ventas_previo }}</strong>
-                            </div>
-                            
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Egresos:</span>
-                                <strong class="text-danger" id="previewEgresos">-$0.00</strong>
-                            </div>
-                            
-                            <hr>
-                            
-                            <div class="d-flex justify-content-between mb-2">
-                                <strong>Esperado en Caja:</strong>
-                                <strong id="previewEsperado">$0.00</strong>
-                            </div>
-                            
-                            <div class="d-flex justify-content-between mb-2">
-                                <strong>Real en Caja:</strong>
-                                <strong id="previewReal">$0.00</strong>
-                            </div>
-                            
-                            <hr style="border-top: 2px solid #1f2937;">
-                            
-                            <div class="d-flex justify-content-between">
-                                <h5 class="mb-0">Diferencia:</h5>
-                                <h4 class="mb-0" id="previewDiferencia">$0.00</h4>
-                            </div>
+                {% if cantidad_ventas_previo == 0 %}
+                    <!-- Formulario simplificado para cierre sin actividad -->
+                    <div class="alert alert-warning d-flex align-items-start mb-4">
+                        <i class="bi bi-exclamation-triangle me-2 mt-1"></i>
+                        <div>
+                            <strong>No hay ventas en este turno.</strong><br>
+                            <small>Puedes registrar un cierre sin actividad o volver y realizar ventas primero.</small>
                         </div>
                     </div>
-
-                    <!-- Buttons -->
-                    <div class="d-flex gap-2">
-                        <a href="{% url 'caja_actual' %}" class="btn btn-secondary flex-fill">
-                            <i class="bi bi-x-circle"></i> Cancelar
-                        </a>
-                        <button type="submit" class="btn btn-primary-modern btn-modern flex-fill">
-                            <i class="bi bi-lock"></i> Cerrar Caja
-                        </button>
+                    
+                    <div class="text-center mb-4 p-4" style="background: #f9fafb; border-radius: 12px;">
+                        <i class="bi bi-x-circle" style="font-size: 48px; color: #6b7280; margin-bottom: 16px;"></i>
+                        <h5 class="mb-2">¿Deseas registrar un cierre sin actividad?</h5>
+                        <p class="text-muted mb-0">Todos los montos quedarán en $0.00</p>
+                        <p class="text-muted"><small>Turno: <strong>{{ turno_nombre }}</strong></small></p>
                     </div>
-                </form>
+                    
+                    <form method="post" action="{% url 'cierre_sin_actividad' %}">
+                        {% csrf_token %}
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'caja_actual' %}" class="btn btn-secondary flex-fill">
+                                <i class="bi bi-arrow-left"></i> Volver
+                            </a>
+                            <button type="submit" class="btn btn-modern flex-fill" style="background: #6b7280; color: white;">
+                                <i class="bi bi-x-circle"></i> Registrar Cierre sin Actividad
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-3">
+                        <small class="text-muted">O puedes realizar ventas antes de cerrar:</small>
+                        <div class="d-grid mt-2">
+                            <a href="{% url 'crear_venta' %}" class="btn btn-modern" style="background: #10b981; color: white;">
+                                <i class="bi bi-plus-circle"></i> Realizar Primera Venta del Turno
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Formulario normal cuando hay ventas -->
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="alert alert-info d-flex align-items-start mb-4">
+                            <i class="bi bi-info-circle me-2 mt-1"></i>
+                            <small>
+                                <strong>Importante:</strong> Verifica que los montos sean correctos antes de cerrar la caja. 
+                                Una vez cerrada, no se podrá modificar (solo recalcular).
+                            </small>
+                        </div>
+
+                        <!-- Monto Inicial -->
+                        <div class="mb-4">
+                            <label class="form-label">Monto Inicial de Caja *</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" name="monto_inicial" step="0.01" min="0" 
+                                       placeholder="0.00" required id="inputMontoInicial">
+                            </div>
+                            <small class="text-muted">Monto con el que se inició el turno</small>
+                        </div>
+
+                        <!-- Egresos -->
+                        <div class="mb-4">
+                            <label class="form-label">Egresos del Turno</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" name="egresos" step="0.01" min="0" 
+                                       value="0" id="inputEgresos">
+                            </div>
+                            <small class="text-muted">Gastos, retiros, etc.</small>
+                        </div>
+
+                        <!-- Detalle Egresos -->
+                        <div class="mb-4">
+                            <label class="form-label">Detalle de Egresos</label>
+                            <textarea class="form-control" name="detalle_egresos" rows="3" 
+                                      placeholder="Describe los egresos realizados..."></textarea>
+                        </div>
+
+                        <!-- Monto Final Real -->
+                        <div class="mb-4">
+                            <label class="form-label">Monto Final Real en Caja *</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" name="monto_final_real" step="0.01" min="0" 
+                                       placeholder="0.00" required id="inputMontoFinal">
+                            </div>
+                            <small class="text-muted">Monto total contado al final del turno</small>
+                        </div>
+
+                        <!-- Observaciones -->
+                        <div class="mb-4">
+                            <label class="form-label">Observaciones</label>
+                            <textarea class="form-control" name="observaciones" rows="3" 
+                                      placeholder="Notas adicionales sobre el cierre..."></textarea>
+                        </div>
+
+                        <!-- Preview de Cálculos -->
+                        <div class="card mb-4" style="background: linear-gradient(135deg, #f9fafb, #ffffff); border: 2px solid #e5e7eb;">
+                            <div class="card-body">
+                                <h6 class="mb-3"><i class="bi bi-calculator"></i> Vista Previa</h6>
+                                
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Monto Inicial:</span>
+                                    <strong id="previewInicial">$0.00</strong>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Efectivo de Ventas:</span>
+                                    <strong class="text-success">${{ efectivo_ventas_previo }}</strong>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Egresos:</span>
+                                    <strong class="text-danger" id="previewEgresos">-$0.00</strong>
+                                </div>
+                                
+                                <hr>
+                                
+                                <div class="d-flex justify-content-between mb-2">
+                                    <strong>Esperado en Caja:</strong>
+                                    <strong id="previewEsperado">$0.00</strong>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between mb-2">
+                                    <strong>Real en Caja:</strong>
+                                    <strong id="previewReal">$0.00</strong>
+                                </div>
+                                
+                                <hr style="border-top: 2px solid #1f2937;">
+                                
+                                <div class="d-flex justify-content-between">
+                                    <h5 class="mb-0">Diferencia:</h5>
+                                    <h4 class="mb-0" id="previewDiferencia">$0.00</h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'caja_actual' %}" class="btn btn-secondary flex-fill">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary-modern btn-modern flex-fill">
+                                <i class="bi bi-lock"></i> Cerrar Caja
+                            </button>
+                        </div>
+                    </form>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -203,11 +243,17 @@ function actualizarPreview() {
 }
 
 // Event listeners
-document.getElementById('inputMontoInicial').addEventListener('input', actualizarPreview);
-document.getElementById('inputEgresos').addEventListener('input', actualizarPreview);
-document.getElementById('inputMontoFinal').addEventListener('input', actualizarPreview);
+const inputInicial = document.getElementById('inputMontoInicial');
+const inputEgresos = document.getElementById('inputEgresos');
+const inputFinal = document.getElementById('inputMontoFinal');
 
-// Actualizar al cargar
-actualizarPreview();
+if (inputInicial && inputEgresos && inputFinal) {
+    inputInicial.addEventListener('input', actualizarPreview);
+    inputEgresos.addEventListener('input', actualizarPreview);
+    inputFinal.addEventListener('input', actualizarPreview);
+    
+    // Actualizar al cargar
+    actualizarPreview();
+}
 </script>
 {% endblock %}

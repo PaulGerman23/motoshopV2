@@ -7,8 +7,15 @@
 <div class="page-header mb-4">
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h1 class="page-title">Cierre de Caja - {{ cierre.fecha|date:"d/m/Y" }}</h1>
+            <h1 class="page-title">Cierre de Caja - {{ cierre.fecha|date:"d/m/Y" }} - Turno {{ cierre.get_turno_display }}</h1>
             <p class="page-subtitle">Realizado por {{ cierre.usuario.get_full_name }} - {{ cierre.fecha_cierre|date:"H:i" }}</p>
+            
+            {% if cierre.observaciones == "Cierre sin actividad" %}
+                <div class="alert alert-info d-flex align-items-center mt-2" style="max-width: 600px;">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Este turno se cerró sin actividad comercial (sin ventas).</strong>
+                </div>
+            {% endif %}
         </div>
         <div class="d-flex gap-2">
             <a href="{% url 'exportar_cierre_pdf' cierre.id %}" class="btn btn-modern" style="background: #ef4444; color: white;">
@@ -30,84 +37,117 @@
                 <h5 class="mb-0"><i class="bi bi-info-circle"></i> Resumen del Cierre</h5>
             </div>
             <div class="card-body">
-                <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                        <div class="text-center p-3" style="background: #f9fafb; border-radius: 12px;">
-                            <small class="text-muted d-block mb-1">Monto Inicial</small>
-                            <h4 class="mb-0">${{ cierre.monto_inicial }}</h4>
+                {% if cierre.cantidad_ventas == 0 %}
+                    <!-- Mensaje especial para cierres sin actividad -->
+                    <div class="alert alert-secondary d-flex align-items-start mb-3">
+                        <i class="bi bi-dash-circle me-2 mt-1" style="font-size: 24px;"></i>
+                        <div>
+                            <h6 class="mb-2"><strong>Turno sin Actividad</strong></h6>
+                            <p class="mb-0">No se realizaron ventas durante este turno. Todos los montos están en $0.00</p>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="text-center p-3" style="background: #f9fafb; border-radius: 12px;">
-                            <small class="text-muted d-block mb-1">Total Ventas</small>
-                            <h4 class="mb-0 text-success">${{ cierre.total_ventas }}</h4>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="text-center p-3" style="background: #f9fafb; border-radius: 12px;">
+                                <small class="text-muted d-block mb-1">Monto Inicial</small>
+                                <h4 class="mb-0">$0.00</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3" style="background: #f9fafb; border-radius: 12px;">
+                                <small class="text-muted d-block mb-1">Total Ventas</small>
+                                <h4 class="mb-0 text-muted">$0.00</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3" style="background: #f9fafb; border-radius: 12px;">
+                                <small class="text-muted d-block mb-1">Cantidad Ventas</small>
+                                <h4 class="mb-0 text-muted">0</h4>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="text-center p-3" style="background: #f9fafb; border-radius: 12px;">
-                            <small class="text-muted d-block mb-1">Cantidad Ventas</small>
-                            <h4 class="mb-0 text-primary">{{ cierre.cantidad_ventas }}</h4>
+                {% else %}
+                    <!-- Contenido normal cuando hay ventas -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="text-center p-3" style="background: #f9fafb; border-radius: 12px;">
+                                <small class="text-muted d-block mb-1">Monto Inicial</small>
+                                <h4 class="mb-0">${{ cierre.monto_inicial }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3" style="background: #f9fafb; border-radius: 12px;">
+                                <small class="text-muted d-block mb-1">Total Ventas</small>
+                                <h4 class="mb-0 text-success">${{ cierre.total_ventas }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3" style="background: #f9fafb; border-radius: 12px;">
+                                <small class="text-muted d-block mb-1">Cantidad Ventas</small>
+                                <h4 class="mb-0 text-primary">{{ cierre.cantidad_ventas }}</h4>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Desglose por Método de Pago -->
-                <h6 class="mb-3">Desglose por Método de Pago</h6>
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between align-items-center p-3" style="border: 2px solid #10b981; border-radius: 12px;">
-                            <div>
-                                <i class="bi bi-cash-coin" style="font-size: 24px; color: #10b981;"></i>
-                                <span class="ms-2">Efectivo</span>
+                    <!-- Desglose por Método de Pago -->
+                    <h6 class="mb-3">Desglose por Método de Pago</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center p-3" style="border: 2px solid #10b981; border-radius: 12px;">
+                                <div>
+                                    <i class="bi bi-cash-coin" style="font-size: 24px; color: #10b981;"></i>
+                                    <span class="ms-2">Efectivo</span>
+                                </div>
+                                <strong style="font-size: 18px;">${{ cierre.efectivo_ventas }}</strong>
                             </div>
-                            <strong style="font-size: 18px;">${{ cierre.efectivo_ventas }}</strong>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center p-3" style="border: 2px solid #3b82f6; border-radius: 12px;">
+                                <div>
+                                    <i class="bi bi-credit-card" style="font-size: 24px; color: #3b82f6;"></i>
+                                    <span class="ms-2">Débito</span>
+                                </div>
+                                <strong style="font-size: 18px;">${{ cierre.debito_ventas }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center p-3" style="border: 2px solid #8b5cf6; border-radius: 12px;">
+                                <div>
+                                    <i class="bi bi-credit-card-2-front" style="font-size: 24px; color: #8b5cf6;"></i>
+                                    <span class="ms-2">Crédito</span>
+                                </div>
+                                <strong style="font-size: 18px;">${{ cierre.credito_ventas }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center p-3" style="border: 2px solid #f59e0b; border-radius: 12px;">
+                                <div>
+                                    <i class="bi bi-arrow-left-right" style="font-size: 24px; color: #f59e0b;"></i>
+                                    <span class="ms-2">Transferencia</span>
+                                </div>
+                                <strong style="font-size: 18px;">${{ cierre.transferencia_ventas }}</strong>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between align-items-center p-3" style="border: 2px solid #3b82f6; border-radius: 12px;">
-                            <div>
-                                <i class="bi bi-credit-card" style="font-size: 24px; color: #3b82f6;"></i>
-                                <span class="ms-2">Débito</span>
-                            </div>
-                            <strong style="font-size: 18px;">${{ cierre.debito_ventas }}</strong>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between align-items-center p-3" style="border: 2px solid #8b5cf6; border-radius: 12px;">
-                            <div>
-                                <i class="bi bi-credit-card-2-front" style="font-size: 24px; color: #8b5cf6;"></i>
-                                <span class="ms-2">Crédito</span>
-                            </div>
-                            <strong style="font-size: 18px;">${{ cierre.credito_ventas }}</strong>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between align-items-center p-3" style="border: 2px solid #f59e0b; border-radius: 12px;">
-                            <div>
-                                <i class="bi bi-arrow-left-right" style="font-size: 24px; color: #f59e0b;"></i>
-                                <span class="ms-2">Transferencia</span>
-                            </div>
-                            <strong style="font-size: 18px;">${{ cierre.transferencia_ventas }}</strong>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Egresos -->
-                {% if cierre.egresos > 0 %}
-                <div class="alert alert-warning">
-                    <h6 class="mb-2"><i class="bi bi-exclamation-triangle"></i> Egresos del Día</h6>
-                    <div class="d-flex justify-content-between">
-                        <span>Total de Egresos:</span>
-                        <strong class="text-danger">${{ cierre.egresos }}</strong>
+                    <!-- Egresos -->
+                    {% if cierre.egresos > 0 %}
+                    <div class="alert alert-warning">
+                        <h6 class="mb-2"><i class="bi bi-exclamation-triangle"></i> Egresos del Turno</h6>
+                        <div class="d-flex justify-content-between">
+                            <span>Total de Egresos:</span>
+                            <strong class="text-danger">${{ cierre.egresos }}</strong>
+                        </div>
+                        {% if cierre.detalle_egresos %}
+                        <hr>
+                        <small><strong>Detalle:</strong><br>{{ cierre.detalle_egresos }}</small>
+                        {% endif %}
                     </div>
-                    {% if cierre.detalle_egresos %}
-                    <hr>
-                    <small><strong>Detalle:</strong><br>{{ cierre.detalle_egresos }}</small>
                     {% endif %}
-                </div>
                 {% endif %}
 
-                <!-- Totales Finales -->
+                <!-- Totales Finales (siempre se muestran) -->
                 <div style="background: linear-gradient(135deg, #f9fafb, #ffffff); border-radius: 12px; padding: 20px; border: 2px solid #e5e7eb;">
                     <div class="d-flex justify-content-between mb-2 pb-2" style="border-bottom: 1px solid #e5e7eb;">
                         <span>Monto Final Esperado:</span>
@@ -134,10 +174,10 @@
             </div>
         </div>
 
-        <!-- Ventas del Día -->
+        <!-- Ventas del Turno -->
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-receipt"></i> Ventas del Día ({{ ventas.count }})</h5>
+                <h5 class="mb-0"><i class="bi bi-receipt"></i> Ventas del Turno ({{ ventas.count }})</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -179,7 +219,7 @@
                             {% empty %}
                             <tr>
                                 <td colspan="6" class="text-center py-4 text-muted">
-                                    No hay ventas registradas
+                                    No hay ventas registradas en este turno
                                 </td>
                             </tr>
                             {% endfor %}
@@ -198,30 +238,33 @@
                 <h5 class="mb-0"><i class="bi bi-graph-up"></i> Estadísticas</h5>
             </div>
             <div class="card-body">
-                <div class="mb-3">
-                    <small class="text-muted">Promedio por Venta</small>
-                    <h4 class="mb-0">
-                        {% if cierre.cantidad_ventas > 0 %}
+                {% if cierre.cantidad_ventas > 0 %}
+                    <div class="mb-3">
+                        <small class="text-muted">Promedio por Venta</small>
+                        <h4 class="mb-0">
                             ${% widthratio cierre.total_ventas cierre.cantidad_ventas 1 %}
-                        {% else %}
-                            $0.00
-                        {% endif %}
-                    </h4>
-                </div>
-                <div class="mb-3">
-                    <small class="text-muted">Método Más Usado</small>
-                    <h5 class="mb-0">
-                        {% if cierre.efectivo_ventas >= cierre.debito_ventas and cierre.efectivo_ventas >= cierre.credito_ventas and cierre.efectivo_ventas >= cierre.transferencia_ventas %}
-                            Efectivo
-                        {% elif cierre.debito_ventas >= cierre.efectivo_ventas and cierre.debito_ventas >= cierre.credito_ventas and cierre.debito_ventas >= cierre.transferencia_ventas %}
-                            Débito
-                        {% elif cierre.credito_ventas >= cierre.efectivo_ventas and cierre.credito_ventas >= cierre.debito_ventas and cierre.credito_ventas >= cierre.transferencia_ventas %}
-                            Crédito
-                        {% else %}
-                            Transferencia
-                        {% endif %}
-                    </h5>
-                </div>
+                        </h4>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Método Más Usado</small>
+                        <h5 class="mb-0">
+                            {% if cierre.efectivo_ventas >= cierre.debito_ventas and cierre.efectivo_ventas >= cierre.credito_ventas and cierre.efectivo_ventas >= cierre.transferencia_ventas %}
+                                Efectivo
+                            {% elif cierre.debito_ventas >= cierre.efectivo_ventas and cierre.debito_ventas >= cierre.credito_ventas and cierre.debito_ventas >= cierre.transferencia_ventas %}
+                                Débito
+                            {% elif cierre.credito_ventas >= cierre.efectivo_ventas and cierre.credito_ventas >= cierre.debito_ventas and cierre.credito_ventas >= cierre.transferencia_ventas %}
+                                Crédito
+                            {% else %}
+                                Transferencia
+                            {% endif %}
+                        </h5>
+                    </div>
+                {% else %}
+                    <div class="alert alert-secondary mb-3">
+                        <i class="bi bi-dash-circle"></i> Turno sin ventas
+                    </div>
+                {% endif %}
+                
                 <div>
                     <small class="text-muted">Estado del Cierre</small>
                     <h5 class="mb-0">
@@ -238,7 +281,8 @@
         </div>
 
         <!-- Gráfico -->
-        <div class="card">
+        {% if cierre.cantidad_ventas > 0 %}
+        <div class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Distribución</h5>
             </div>
@@ -246,9 +290,10 @@
                 <canvas id="distribucionChart"></canvas>
             </div>
         </div>
+        {% endif %}
 
         <!-- Acciones -->
-        <div class="card mt-4">
+        <div class="card">
             <div class="card-header">
                 <h5 class="mb-0"><i class="bi bi-gear"></i> Acciones</h5>
             </div>
@@ -276,42 +321,46 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Gráfico de distribución
-const ctx = document.getElementById('distribucionChart').getContext('2d');
-new Chart(ctx, {
-    type: 'pie',
-    data: {
-        labels: ['Efectivo', 'Débito', 'Crédito', 'Transferencia'],
-        datasets: [{
-            data: [
-                {{ cierre.efectivo_ventas }},
-                {{ cierre.debito_ventas }},
-                {{ cierre.credito_ventas }},
-                {{ cierre.transferencia_ventas }}
-            ],
-            backgroundColor: [
-                '#10b981',
-                '#3b82f6',
-                '#8b5cf6',
-                '#f59e0b'
-            ]
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                position: 'bottom'
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        return context.label + ': $' + context.parsed.toLocaleString();
+// Gráfico de distribución (solo si hay ventas)
+{% if cierre.cantidad_ventas > 0 %}
+const ctx = document.getElementById('distribucionChart');
+if (ctx) {
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Efectivo', 'Débito', 'Crédito', 'Transferencia'],
+            datasets: [{
+                data: [
+                    {{ cierre.efectivo_ventas }},
+                    {{ cierre.debito_ventas }},
+                    {{ cierre.credito_ventas }},
+                    {{ cierre.transferencia_ventas }}
+                ],
+                backgroundColor: [
+                    '#10b981',
+                    '#3b82f6',
+                    '#8b5cf6',
+                    '#f59e0b'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': $' + context.parsed.toLocaleString();
+                        }
                     }
                 }
             }
         }
-    }
-});
+    });
+}
+{% endif %}
 </script>
 {% endblock %}
