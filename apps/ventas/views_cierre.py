@@ -118,6 +118,10 @@ def detalle_cierre(request, cierre_id):
 @login_required
 def caja_actual(request):
     """Muestra el estado actual de la caja según el turno"""
+    from django.utils import timezone
+    from datetime import datetime, timedelta, time
+    from decimal import Decimal
+    
     hoy = timezone.now().date()
     turno_actual = CierreCaja.determinar_turno_actual()
     
@@ -129,17 +133,22 @@ def caja_actual(request):
     
     # Crear datetime para filtrar ventas
     if turno_actual == 'noche' and hora_inicio > hora_fin:
+        # El turno noche cruza la medianoche
         datetime_inicio = datetime.combine(hoy, hora_inicio)
         datetime_fin = datetime.combine(hoy + timedelta(days=1), hora_fin)
     else:
         datetime_inicio = datetime.combine(hoy, hora_inicio)
         datetime_fin = datetime.combine(hoy, hora_fin)
     
+    # IMPORTANTE: Hacer las ventas timezone-aware
+    datetime_inicio = timezone.make_aware(datetime_inicio)
+    datetime_fin = timezone.make_aware(datetime_fin)
+    
     # Calcular ventas del turno
     ventas_turno = Venta.objects.filter(
         fecha__gte=datetime_inicio,
         fecha__lt=datetime_fin,
-        estado_venta=2
+        estado_venta=2  # Solo ventas pagadas
     )
     
     total_ventas = ventas_turno.aggregate(Sum('total'))['total__sum'] or Decimal('0')
@@ -150,6 +159,14 @@ def caja_actual(request):
     debito = ventas_turno.filter(tipo_pago='debito').aggregate(Sum('total'))['total__sum'] or Decimal('0')
     credito = ventas_turno.filter(tipo_pago='credito').aggregate(Sum('total'))['total__sum'] or Decimal('0')
     transferencia = ventas_turno.filter(tipo_pago='transferencia').aggregate(Sum('total'))['total__sum'] or Decimal('0')
+    
+    # Sumar montos de pagos mixtos
+    pagos_mixtos = ventas_turno.filter(tipo_pago='mixto')
+    for pago in pagos_mixtos:
+        efectivo += pago.monto_efectivo
+        # Asumimos que monto_tarjeta puede ser débito o crédito
+        # Por simplicidad lo sumamos a débito
+        debito += pago.monto_tarjeta
     
     # Ventas recientes del turno
     ventas_recientes = ventas_turno.select_related('cliente', 'usuario').order_by('-fecha')[:10]

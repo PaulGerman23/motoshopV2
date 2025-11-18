@@ -141,10 +141,110 @@ class Ticket(models.Model):
         verbose_name = 'Ticket'
         verbose_name_plural = 'Tickets'
         ordering = ['-fecha_creacion']
-
+    def cancelar(self):
+        """Cancela el ticket"""
+        if self.estado == 'finalizado':
+            raise ValueError("No se puede cancelar un ticket finalizado")
+        
+        self.estado = 'cancelado'
+        self.save()
+        
+        # Registrar auditoría
+        AuditoriaMovimiento.registrar(
+            usuario=self.usuario,
+            accion='ticket_cancelar',
+            descripcion=f'Ticket {self.ticket_id} cancelado',
+            datos_adicionales={
+                'ticket_id': self.ticket_id,
+                'codigo_ticket': self.codigo_ticket,
+                'total': float(self.total)
+            }
+        )
+    
+    def finalizar(self):
+        """Finaliza el ticket y crea la venta definitiva"""
+        from decimal import Decimal
+        from django.db import transaction
+        
+        if self.estado != 'pendiente':
+            raise ValueError("Solo se pueden finalizar tickets pendientes")
+        
+        if not self.tipo_pago:
+            raise ValueError("Debe especificar un método de pago")
+        
+        with transaction.atomic():
+            # Validar stock de todos los productos
+            for detalle in self.detalles.filter(activo=True):
+                if detalle.producto and detalle.producto.stock < detalle.cantidad:
+                    raise ValueError(
+                        f'Stock insuficiente para {detalle.producto.descripcion}. '
+                        f'Stock actual: {detalle.producto.stock}'
+                    )
+            
+            # Generar código de venta
+            from .models import Venta
+            ultimo_codigo = Venta.objects.order_by('-codigo_venta').first()
+            nuevo_codigo = (ultimo_codigo.codigo_venta + 1) if ultimo_codigo else 1000
+            
+            # Crear venta
+            venta = Venta.objects.create(
+                cliente=self.cliente,
+                usuario=self.usuario,
+                subtotal=self.subtotal,
+                descuento_porcentaje=self.descuento_porcentaje,
+                descuento_monto=self.descuento_monto,
+                total=self.total,
+                tipo_pago=self.tipo_pago,
+                es_pago_mixto=(self.tipo_pago == 'mixto'),
+                monto_efectivo=self.monto_efectivo,
+                monto_tarjeta=self.monto_tarjeta,
+                observacion=self.observacion,
+                codigo_venta=nuevo_codigo,
+                estado_venta=2  # Pagado
+            )
+            
+            # Crear detalles y actualizar stock
+            from .models import DetalleVenta
+            for detalle in self.detalles.filter(activo=True):
+                # Crear detalle de venta
+                DetalleVenta.objects.create(
+                    venta=venta,
+                    producto=detalle.producto,
+                    cantidad=detalle.cantidad,
+                    precio_unitario=detalle.precio_unitario,
+                    subtotal=detalle.subtotal
+                )
+                
+                # Actualizar stock
+                if detalle.producto:
+                    detalle.producto.stock -= detalle.cantidad
+                    detalle.producto.save()
+            
+            # Marcar ticket como finalizado
+            self.estado = 'finalizado'
+            self.fecha_finalizacion = timezone.now()
+            self.venta = venta
+            self.save()
+            
+            # Registrar auditoría
+            AuditoriaMovimiento.registrar(
+                usuario=self.usuario,
+                accion='ticket_finalizar',
+                descripcion=f'Ticket {self.ticket_id} finalizado → Venta #{nuevo_codigo}',
+                venta=venta,
+                datos_adicionales={
+                    'ticket_id': self.ticket_id,
+                    'codigo_ticket': self.codigo_ticket,
+                    'codigo_venta': nuevo_codigo,
+                    'total': float(self.total)
+                }
+            )
+            
+            return venta    
+    
     def __str__(self):
         return f"Ticket #{self.codigo_ticket} - {self.get_estado_display()}"
-
+    
 
 class DetalleTicket(models.Model):
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='detalles')

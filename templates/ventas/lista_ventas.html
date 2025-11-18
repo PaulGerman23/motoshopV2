@@ -3,64 +3,226 @@
 {% block title %}Ventas - MotoShop{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="bi bi-cart-check"></i> Listado de Ventas</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="{% url 'crear_venta' %}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nueva Venta
-        </a>
+<!-- Page Header -->
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Historial de Ventas</h1>
+            <p class="page-subtitle">Todas las ventas registradas en el sistema</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'exportar_ventas_excel' %}" class="btn btn-modern" style="background: #10b981; color: white;">
+                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+            </a>
+            <a href="{% url 'crear_venta' %}" class="btn btn-primary-modern btn-modern">
+                <i class="bi bi-plus-circle"></i> Nueva Venta
+            </a>
+        </div>
     </div>
 </div>
 
-<div class="card shadow">
+<!-- Stats Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card stat-card-purple">
+            <div class="stat-icon">
+                <i class="bi bi-receipt"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ ventas.count }}</div>
+                <div class="stat-label">Total Ventas</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-card-green">
+            <div class="stat-icon">
+                <i class="bi bi-currency-dollar"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">$152,450</div>
+                <div class="stat-label">Monto Total</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-card-blue">
+            <div class="stat-icon">
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ ventas|length }}</div>
+                <div class="stat-label">Ventas Pagadas</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-card-orange">
+            <div class="stat-icon">
+                <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Pendientes</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
     <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">Buscar</label>
+                <div class="search-box-modern">
+                    <i class="bi bi-search"></i>
+                    <input type="text" class="form-control" id="searchVenta" placeholder="Buscar por código o cliente...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Desde</label>
+                <input type="date" class="form-control" id="fechaDesde">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Hasta</label>
+                <input type="date" class="form-control" id="fechaHasta">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Método de Pago</label>
+                <select class="form-select" id="filterMetodo">
+                    <option value="">Todos</option>
+                    <option value="efectivo">Efectivo</option>
+                    <option value="debito">Débito</option>
+                    <option value="credito">Crédito</option>
+                    <option value="transferencia">Transferencia</option>
+                    <option value="mixto">Mixto</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Estado</label>
+                <select class="form-select" id="filterEstado">
+                    <option value="">Todos</option>
+                    <option value="2">Pagado</option>
+                    <option value="1">Pendiente</option>
+                    <option value="0">Anulado</option>
+                </select>
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <button class="btn btn-modern w-100" style="background: #f3f4f6; color: #374151;" onclick="limpiarFiltros()">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ventas Table -->
+<div class="card">
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover table-striped">
-                <thead class="table-dark">
+            <table class="modern-table" id="tablaVentas">
+                <thead>
                     <tr>
-                        <th>Código</th>
-                        <th>Fecha</th>
-                        <th>Cliente</th>
-                        <th>Usuario</th>
-                        <th>Total</th>
-                        <th>Pago</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
+                        <th><input type="checkbox" class="form-check-input"></th>
+                        <th>CÓDIGO</th>
+                        <th>FECHA/HORA</th>
+                        <th>CLIENTE</th>
+                        <th>VENDEDOR</th>
+                        <th>MÉTODO PAGO</th>
+                        <th>TOTAL</th>
+                        <th>ESTADO</th>
+                        <th>ACCIONES</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for venta in ventas %}
-                    <tr>
-                        <td><strong>#{{ venta.codigo_venta }}</strong></td>
-                        <td>{{ venta.fecha|date:"d/m/Y H:i" }}</td>
+                    <tr class="venta-row"
+                        data-venta-id="{{ venta.id }}"
+                        data-codigo="{{ venta.codigo_venta }}"
+                        data-cliente="{{ venta.cliente.nombre_completo|default:'Consumidor Final' }}"
+                        data-metodo="{{ venta.tipo_pago }}"
+                        data-estado="{{ venta.estado_venta }}">
+                        <td><input type="checkbox" class="form-check-input"></td>
+                        <td>
+                            <span class="code-badge">#{{ venta.codigo_venta }}</span>
+                        </td>
+                        <td>
+                            <div>{{ venta.fecha|date:"d/m/Y" }}</div>
+                            <small class="text-muted">{{ venta.fecha|date:"H:i" }}</small>
+                        </td>
                         <td>
                             {% if venta.cliente %}
-                                {{ venta.cliente.nombre_completo }}
+                                <div class="user-info">
+                                    <div class="user-avatar" style="width: 32px; height: 32px; font-size: 12px;">
+                                        {{ venta.cliente.nombre.0 }}{{ venta.cliente.apellido.0 }}
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 13px; font-weight: 600;">
+                                            {{ venta.cliente.nombre_completo }}
+                                        </div>
+                                    </div>
+                                </div>
                             {% else %}
-                                Consumidor Final
-                            {% endif %}
-                        </td>
-                        <td>{{ venta.usuario.first_name }}</td>
-                        <td><strong>${{ venta.total }}</strong></td>
-                        <td><span class="badge bg-info">{{ venta.get_tipo_pago_display }}</span></td>
-                        <td>
-                            {% if venta.estado_venta == 2 %}
-                                <span class="badge bg-success">Pagado</span>
-                            {% elif venta.estado_venta == 1 %}
-                                <span class="badge bg-warning">Pendiente</span>
-                            {% else %}
-                                <span class="badge bg-danger">Anulado</span>
+                                <span class="text-muted">Consumidor Final</span>
                             {% endif %}
                         </td>
                         <td>
-                            <a href="{% url 'detalle_venta' venta.id %}" class="btn btn-sm btn-info">
-                                <i class="bi bi-eye"></i>
-                            </a>
+                            <small>{{ venta.usuario.get_full_name }}</small>
+                        </td>
+                        <td>
+                            <span class="venta-metodo {{ venta.tipo_pago }}">
+                                {{ venta.get_tipo_pago_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <strong class="text-success">${{ venta.total }}</strong>
+                        </td>
+                        <td>
+                            <span class="estado-venta {% if venta.estado_venta == 2 %}pagado{% elif venta.estado_venta == 1 %}pendiente{% else %}anulado{% endif %}">
+                                {{ venta.get_estado_venta_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <!-- Ver -->
+                                <a href="{% url 'detalle_venta' venta.id %}" class="btn-action btn-action-view" data-bs-toggle="tooltip" title="Ver detalle">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                
+                                <!-- Imprimir -->
+                                <a href="{% url 'exportar_venta_pdf' venta.id %}" class="btn-action" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;" data-bs-toggle="tooltip" title="Descargar PDF">
+                                    <i class="bi bi-file-pdf"></i>
+                                </a>
+                                
+                                <!-- Anular (solo si está pagada o pendiente) -->
+                                {% if venta.estado_venta != 0 %}
+                                <button class="btn-action btn-action-delete" onclick="confirmarAnular({{ venta.id }}, '{{ venta.codigo_venta }}', '{{ venta.total }}')" data-bs-toggle="tooltip" title="Anular venta">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                                {% endif %}
+                                
+                                <!-- Crear Devolución (solo si está pagada y puede devolverse) -->
+                                {% if venta.estado_venta == 2 and venta.puede_devolverse %}
+                                <a href="{% url 'crear_devolucion' venta.id %}" class="btn-action" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;" data-bs-toggle="tooltip" title="Crear devolución">
+                                    <i class="bi bi-arrow-return-left"></i>
+                                </a>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="8" class="text-center text-muted">No hay ventas registradas</td>
+                        <td colspan="9" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <p>No hay ventas registradas</p>
+                                <a href="{% url 'crear_venta' %}" class="btn btn-primary-modern btn-modern mt-3">
+                                    <i class="bi bi-plus-circle"></i>
+                                    Crear Primera Venta
+                                </a>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -68,4 +230,160 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Anular Venta -->
+<div class="modal fade" id="modalAnular" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Anular Venta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="delete-icon mb-3">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <h6>¿Estás seguro de anular esta venta?</h6>
+                <p class="text-muted mb-0" id="ventaAnularInfo"></p>
+                <div class="alert alert-warning mt-3 text-start">
+                    <small><i class="bi bi-info-circle"></i> Esta acción restaurará el stock de los productos vendidos.</small>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="formAnular" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-x-circle"></i> Anular Venta
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Métodos de pago */
+.venta-metodo {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.venta-metodo.efectivo {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.venta-metodo.debito {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.venta-metodo.credito {
+    background: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
+}
+
+.venta-metodo.transferencia {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.venta-metodo.mixto {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+}
+
+/* Estados */
+.estado-venta {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.estado-venta.pagado {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.estado-venta.pendiente {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.estado-venta.anulado {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Filtrado en tiempo real
+document.getElementById('searchVenta').addEventListener('keyup', filtrarVentas);
+document.getElementById('filterMetodo').addEventListener('change', filtrarVentas);
+document.getElementById('filterEstado').addEventListener('change', filtrarVentas);
+
+function filtrarVentas() {
+    const searchText = document.getElementById('searchVenta').value.toLowerCase();
+    const metodo = document.getElementById('filterMetodo').value;
+    const estado = document.getElementById('filterEstado').value;
+    
+    const ventas = document.querySelectorAll('.venta-row');
+    
+    ventas.forEach(venta => {
+        const codigo = venta.dataset.codigo.toLowerCase();
+        const cliente = venta.dataset.cliente.toLowerCase();
+        const ventaMetodo = venta.dataset.metodo;
+        const ventaEstado = venta.dataset.estado;
+        
+        let mostrar = true;
+        
+        if (searchText && !codigo.includes(searchText) && !cliente.includes(searchText)) {
+            mostrar = false;
+        }
+        
+        if (metodo && ventaMetodo !== metodo) {
+            mostrar = false;
+        }
+        
+        if (estado && ventaEstado !== estado) {
+            mostrar = false;
+        }
+        
+        venta.style.display = mostrar ? '' : 'none';
+    });
+}
+
+function limpiarFiltros() {
+    document.getElementById('searchVenta').value = '';
+    document.getElementById('fechaDesde').value = '';
+    document.getElementById('fechaHasta').value = '';
+    document.getElementById('filterMetodo').value = '';
+    document.getElementById('filterEstado').value = '';
+    filtrarVentas();
+}
+
+function confirmarAnular(ventaId, codigo, total) {
+    document.getElementById('ventaAnularInfo').textContent = `Venta #${codigo} - $${total}`;
+    document.getElementById('formAnular').action = `/ventas/anular/${ventaId}/`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalAnular'));
+    modal.show();
+}
+
+// Inicializar tooltips
+const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+});
+</script>
 {% endblock %}
