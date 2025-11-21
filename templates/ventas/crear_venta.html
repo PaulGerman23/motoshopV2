@@ -1,296 +1,410 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Nueva Venta - MotoShop{% endblock %}
+{% block title %}Nueva Venta{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/productos-fix.css' %}">
-
 <style>
-.cart-item {
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 10px;
-    background: #f9fafb;
-}
+    /* Alerta de Caja Cerrada */
+    .caja-alert {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        border-left: 4px solid #ef4444;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+    }
+    .caja-alert h3 {
+        color: #991b1b;
+        margin: 0 0 0.5rem 0;
+    }
+    .caja-alert p {
+        color: #7f1d1d;
+        margin: 0.5rem 0;
+    }
+    .btn-abrir-caja {
+        display: inline-block;
+        margin-top: 1rem;
+        padding: 0.75rem 1.5rem;
+        background: #10b981;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    .btn-abrir-caja:hover {
+        background: #059669;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+    }
 
-.cart-item input[type="number"] {
-    text-align: center;
-}
+    /* Info de Caja Actual */
+    .caja-info {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        border-left: 4px solid #10b981;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .caja-info-text {
+        color: #065f46;
+        font-weight: 600;
+    }
+    .caja-info-link {
+        color: #059669;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .caja-info-link:hover {
+        text-decoration: underline;
+    }
 
-.badge-stock {
-    font-size: 11px;
-    padding: 4px 8px;
-}
-
-.product-search-box {
-    position: sticky;
-    top: 0;
-    background: white;
-    z-index: 10;
-    padding-bottom: 10px;
-}
+    /* Estilos existentes del formulario de venta */
+    .venta-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    .venta-form {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding: 2rem;
+    }
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .form-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: #f9fafb;
+        border-radius: 10px;
+    }
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .productos-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .producto-item {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr auto;
+        gap: 1rem;
+        align-items: end;
+        padding: 1rem;
+        background: #f9fafb;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    .btn-remove {
+        padding: 0.75rem 1rem;
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .btn-remove:hover {
+        background: #dc2626;
+    }
+    .btn-add-product {
+        padding: 0.75rem 1.5rem;
+        background: #10b981;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    .btn-add-product:hover {
+        background: #059669;
+    }
+    .totales-section {
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        padding: 2rem;
+        border-radius: 10px;
+        margin-top: 2rem;
+    }
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        font-size: 1.1rem;
+    }
+    .total-final {
+        border-top: 3px solid #667eea;
+        padding-top: 1rem;
+        margin-top: 1rem;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    .btn-submit {
+        padding: 1rem 2rem;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .btn-submit:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    .btn-submit:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        transform: none;
+    }
+    .btn-cancel {
+        padding: 1rem 2rem;
+        background: #6b7280;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    .btn-cancel:hover {
+        background: #4b5563;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header mb-4">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <h1 class="page-title">Nueva Venta</h1>
-            <p class="page-subtitle">Registra una nueva venta en el sistema</p>
-        </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-modern" style="background: #f59e0b; color: white;" data-bs-toggle="modal" data-bs-target="#modalTickets">
-                <i class="bi bi-ticket-perforated"></i>
-                Tickets Pendientes
-            </button>
-            <a href="{% url 'lista_ventas' %}" class="btn btn-modern" style="background: #f3f4f6; color: #374151;">
-                <i class="bi bi-arrow-left"></i> Volver
-            </a>
-        </div>
+<div class="venta-container">
+    <!-- Verificación de Caja -->
+    {% if not caja_abierta %}
+    <div class="caja-alert">
+        <h3><i class="fas fa-exclamation-triangle"></i> No hay caja abierta</h3>
+        <p>Para registrar ventas, primero debes abrir una caja. La caja te permite llevar un control de todas las transacciones del día.</p>
+        <a href="{% url 'caja_abrir' %}" class="btn-abrir-caja">
+            <i class="fas fa-lock-open"></i> Abrir Caja Ahora
+        </a>
+        <a href="{% url 'ventas_lista' %}" class="btn-cancel" style="margin-left: 1rem; display: inline-block; padding: 0.75rem 1.5rem;">
+            <i class="fas fa-arrow-left"></i> Volver a Ventas
+        </a>
     </div>
+    {% else %}
+    <div class="caja-info">
+        <div class="caja-info-text">
+            <i class="fas fa-cash-register"></i> 
+            Caja #{{ caja_abierta.numero }} abierta - 
+            Total actual: ${{ caja_abierta.total_ventas|floatformat:2 }}
+        </div>
+        <a href="{% url 'caja_actual' %}" class="caja-info-link">
+            Ver detalles <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+
+    <div class="venta-form">
+        <div class="form-header">
+            <h1 style="margin: 0;"><i class="fas fa-shopping-cart"></i> Nueva Venta</h1>
+            <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Registra una nueva venta en el sistema</p>
+        </div>
+
+        <form method="post" id="ventaForm">
+            {% csrf_token %}
+            
+            <!-- Sección: Información del Cliente -->
+            <div class="form-section">
+                <h3><i class="fas fa-user"></i> Información del Cliente</h3>
+                <div class="form-group">
+                    {{ form.cliente.label_tag }}
+                    {{ form.cliente }}
+                    {% if form.cliente.errors %}
+                        <div style="color: #ef4444; margin-top: 0.5rem;">{{ form.cliente.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Sección: Productos -->
+            <div class="form-section">
+                <h3><i class="fas fa-box"></i> Productos</h3>
+                <div id="productos-container">
+                    <!-- Los productos se agregarán aquí dinámicamente -->
+                </div>
+                <button type="button" class="btn-add-product" onclick="agregarProducto()">
+                    <i class="fas fa-plus"></i> Agregar Producto
+                </button>
+            </div>
+
+            <!-- Sección: Método de Pago -->
+            <div class="form-section">
+                <h3><i class="fas fa-credit-card"></i> Método de Pago</h3>
+                <div class="form-group">
+                    {{ form.metodo_pago.label_tag }}
+                    {{ form.metodo_pago }}
+                    {% if form.metodo_pago.errors %}
+                        <div style="color: #ef4444; margin-top: 0.5rem;">{{ form.metodo_pago.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Totales -->
+            <div class="totales-section">
+                <div class="total-row">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">$0.00</span>
+                </div>
+                <div class="total-row">
+                    <span>IVA (21%):</span>
+                    <span id="iva">$0.00</span>
+                </div>
+                <div class="total-row total-final">
+                    <span>Total:</span>
+                    <span id="total">$0.00</span>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-check"></i> Registrar Venta
+                </button>
+                <a href="{% url 'ventas_lista' %}" class="btn-cancel">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+    {% endif %}
 </div>
 
-<div class="row">
-    <!-- Lista de productos -->
-    <div class="col-lg-7">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-search"></i> Buscar Productos</h5>
-            </div>
-            <div class="card-body">
-                <div class="product-search-box">
-                    <div class="search-box-modern mb-3">
-                        <i class="bi bi-search"></i>
-                        <input type="text" class="form-control" id="buscarProducto" placeholder="Buscar por código o descripción...">
-                    </div>
-                </div>
+{% if caja_abierta %}
+<script>
+let contadorProductos = 0;
 
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Código</th>
-                                <th>Descripción</th>
-                                <th>Precio</th>
-                                <th>Stock</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="listaProductos">
-                            {% for producto in productos %}
-                            <tr>
-                                <td><span class="code-badge">#{{ producto.codigo }}</span></td>
-                                <td>{{ producto.descripcion|truncatewords:8 }}</td>
-                                <td><strong>${{ producto.precio_venta }}</strong></td>
-                                <td>
-                                    {% if producto.stock <= producto.stock_minimo %}
-                                        <span class="badge bg-danger badge-stock">{{ producto.stock }}</span>
-                                    {% elif producto.stock <= 20 %}
-                                        <span class="badge bg-warning badge-stock">{{ producto.stock }}</span>
-                                    {% else %}
-                                        <span class="badge bg-success badge-stock">{{ producto.stock }}</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-sm btn-primary" 
-                                            data-id="{{ producto.id }}"
-                                            data-descripcion="{{ producto.descripcion }}"
-                                            data-precio="{{ producto.precio_venta }}"
-                                            data-stock="{{ producto.stock }}"
-                                            onclick="agregarAlCarrito(this)"
-                                            {% if producto.stock == 0 %}disabled{% endif %}>
-                                        <i class="bi bi-plus-lg"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center text-muted py-4">
-                                    No hay productos disponibles
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+function agregarProducto() {
+    contadorProductos++;
+    const container = document.getElementById('productos-container');
+    const productoDiv = document.createElement('div');
+    productoDiv.className = 'producto-item';
+    productoDiv.id = `producto-${contadorProductos}`;
+    
+    productoDiv.innerHTML = `
+        <div class="form-group" style="margin: 0;">
+            <label>Producto</label>
+            <select name="producto_${contadorProductos}" class="form-control producto-select" onchange="actualizarPrecio(${contadorProductos})" required>
+                <option value="">Seleccionar producto...</option>
+                {% for producto in productos %}
+                <option value="{{ producto.id }}" data-precio="{{ producto.precio_venta }}">
+                    {{ producto.nombre }} - Stock: {{ producto.stock }}
+                </option>
+                {% endfor %}
+            </select>
         </div>
-    </div>
-
-    <!-- Carrito de compra -->
-    <div class="col-lg-5">
-        <div class="card sticky-top" style="top: 20px;">
-            <div class="card-header" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
-                <h5 class="mb-0"><i class="bi bi-cart-check"></i> Carrito de Venta</h5>
-            </div>
-            <div class="card-body">
-                <form method="post" id="formVenta">
-                    {% csrf_token %}
-                    
-                    <!-- Cliente -->
-                    <div class="mb-3">
-                        <label for="cliente" class="form-label">Cliente</label>
-                        <select name="cliente" id="cliente" class="form-select">
-                            <option value="">Consumidor Final</option>
-                            {% for cliente in clientes %}
-                            <option value="{{ cliente.id }}">{{ cliente.nombre_completo }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <!-- Tipo de pago -->
-                    <div class="mb-3">
-                        <label for="tipo_pago" class="form-label">Método de Pago *</label>
-                        <select name="tipo_pago" id="tipo_pago" class="form-select" required>
-                            <option value="">Seleccionar...</option>
-                            <option value="efectivo">Efectivo</option>
-                            <option value="debito">Tarjeta de Débito</option>
-                            <option value="credito">Tarjeta de Crédito</option>
-                            <option value="transferencia">Transferencia</option>
-                            <option value="mixto">Pago Mixto</option> <!-- ← AGREGAR ESTA LÍNEA -->
-                        </select>
-                        <!-- Pago Mixto -->
-                        <div id="pagoMixtoContainer" style="display: none;" class="mt-3">
-                            <div class="alert alert-info">
-                                <small><i class="bi bi-info-circle"></i> Ingresa los montos de efectivo y tarjeta</small>
-                            </div>
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <label class="form-label small">Efectivo:</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" id="montoEfectivo" step="0.01" min="0" value="0">
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label small">Tarjeta:</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" id="montoTarjeta" step="0.01" min="0" value="0">
-                                    </div>
-                                </div>
-                            </div>
-                            <small class="text-success d-block mt-2" id="sumaPagoMixto">Suma: $0.00</small>
-                        </div>
-                    </div>
-
-                    <!-- Observaciones -->
-                    <div class="mb-3">
-                        <label for="observacion" class="form-label">Observaciones</label>
-                        <textarea name="observacion" id="observacion" class="form-control" rows="2" placeholder="Notas adicionales..."></textarea>
-                    </div>
-
-                    <!-- Productos del carrito -->
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="mb-0">Productos:</h6>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="limpiarCarrito()">
-                                <i class="bi bi-trash"></i> Limpiar
-                            </button>
-                        </div>
-                        <div id="carritoItems" style="max-height: 300px; overflow-y: auto;">
-                            <p class="text-muted text-center py-4">El carrito está vacío</p>
-                        </div>
-                    </div>
-
-                    <!-- Descuento -->
-                    <div class="mb-3">
-                        <button type="button" class="btn btn-sm btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#modalDescuento">
-                            <i class="bi bi-percent"></i> Aplicar Descuento
-                        </button>
-                    </div>
-
-                    <!-- Totales -->
-                    <div class="card mb-3" style="background: #f9fafb;">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Subtotal:</span>
-                                <strong id="subtotalVenta">$0.00</strong>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Descuento:</span>
-                                <strong id="descuentoVenta" class="text-danger">-$0.00</strong>
-                            </div>
-                            <hr>
-                            <div class="d-flex justify-content-between">
-                                <strong>TOTAL:</strong>
-                                <h4 class="mb-0 text-success" id="totalVenta">$0.00</h4>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Campo oculto para productos -->
-                    <input type="hidden" name="productos" id="productosJSON">
-
-                    <!-- Botones de acción -->
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-success btn-lg" id="btnFinalizarVenta" disabled>
-                            <i class="bi bi-check-circle"></i> Finalizar Venta
-                        </button>
-                        <button type="button" class="btn btn-warning" id="btnGuardarTicket" onclick="guardarTicket()" disabled>
-                            <i class="bi bi-ticket"></i> Guardar como Ticket
-                        </button>
-                    </div>
-                </form>
-            </div>
+        <div class="form-group" style="margin: 0;">
+            <label>Cantidad</label>
+            <input type="number" name="cantidad_${contadorProductos}" class="form-control cantidad-input" 
+                   min="1" value="1" onchange="calcularTotales()" required>
         </div>
-    </div>
-</div>
-
-<!-- Modal de Descuento -->
-<div class="modal fade" id="modalDescuento" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content modern-modal">
-            <div class="modal-header">
-                <h5 class="modal-title">Aplicar Descuento</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">Tipo de Descuento</label>
-                    <select class="form-select" id="tipoDescuento">
-                        <option value="porcentaje">Porcentaje (%)</option>
-                        <option value="monto">Monto Fijo ($)</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Valor</label>
-                    <input type="number" class="form-control" id="valorDescuento" min="0" step="0.01" value="0">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="quitarDescuento()">Quitar Descuento</button>
-                <button type="button" class="btn btn-primary" onclick="aplicarDescuento()">Aplicar</button>
-            </div>
+        <div class="form-group" style="margin: 0;">
+            <label>Precio Unitario</label>
+            <input type="number" name="precio_${contadorProductos}" class="form-control precio-input" 
+                   step="0.01" min="0" readonly>
         </div>
-    </div>
-</div>
-
-<!-- Modal de Tickets Pendientes -->
-<div class="modal fade" id="modalTickets" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content modern-modal">
-            <div class="modal-header">
-                <h5 class="modal-title">Tickets Pendientes</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div id="listaTickets">
-                    <div class="text-center py-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Cargando...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="form-group" style="margin: 0;">
+            <label>Subtotal</label>
+            <input type="text" class="form-control subtotal-producto" readonly>
         </div>
-    </div>
-</div>
-{% endblock %}
+        <button type="button" class="btn-remove" onclick="eliminarProducto(${contadorProductos})">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    
+    container.appendChild(productoDiv);
+}
 
-{% block extra_js %}
-<script src="{% static 'js/ventas-pos.js' %}"></script>
-<script src="{% static 'js/ventas-validaciones.js' %}"></script>
+function eliminarProducto(id) {
+    const producto = document.getElementById(`producto-${id}`);
+    if (producto) {
+        producto.remove();
+        calcularTotales();
+    }
+}
+
+function actualizarPrecio(id) {
+    const select = document.querySelector(`#producto-${id} .producto-select`);
+    const precioInput = document.querySelector(`#producto-${id} .precio-input`);
+    
+    if (select.selectedIndex > 0) {
+        const precio = select.options[select.selectedIndex].dataset.precio;
+        precioInput.value = precio;
+        calcularTotales();
+    } else {
+        precioInput.value = '';
+    }
+}
+
+function calcularTotales() {
+    let subtotal = 0;
+    
+    document.querySelectorAll('.producto-item').forEach(item => {
+        const cantidad = parseFloat(item.querySelector('.cantidad-input').value) || 0;
+        const precio = parseFloat(item.querySelector('.precio-input').value) || 0;
+        const subtotalProducto = cantidad * precio;
+        
+        item.querySelector('.subtotal-producto').value = `$${subtotalProducto.toFixed(2)}`;
+        subtotal += subtotalProducto;
+    });
+    
+    const iva = subtotal * 0.21;
+    const total = subtotal + iva;
+    
+    document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+    document.getElementById('iva').textContent = `$${iva.toFixed(2)}`;
+    document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+}
+
+// Agregar un producto por defecto al cargar
+document.addEventListener('DOMContentLoaded', function() {
+    agregarProducto();
+});
+</script>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Recalcular Caja - {{ caja.numero }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .recalcular-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .recalcular-header {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .comparison-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+    .comparison-card {
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+    }
+    .card-before {
+        background: #fee2e2;
+        border: 2px solid #ef4444;
+    }
+    .card-after {
+        background: #d1fae5;
+        border: 2px solid #10b981;
+    }
+    .comparison-label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .comparison-value {
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+    }
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+    .detail-item:last-child {
+        border-bottom: none;
+    }
+    .detail-label {
+        color: #6b7280;
+        font-weight: 500;
+    }
+    .detail-value {
+        font-weight: 600;
+    }
+    .btn-action {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+        margin: 0.5rem;
+    }
+    .btn-confirm {
+        background: #10b981;
+        color: white;
+    }
+    .btn-confirm:hover {
+        background: #059669;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+    }
+    .btn-cancel {
+        background: #6b7280;
+        color: white;
+    }
+    .btn-cancel:hover {
+        background: #4b5563;
+    }
+    .warning-box {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        padding: 1rem;
+        border-radius: 5px;
+        margin: 1.5rem 0;
+    }
+    .actions-container {
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid #e5e7eb;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="recalcular-container">
+    <div class="recalcular-header">
+        <h1 style="margin: 0;"><i class="fas fa-sync-alt"></i> Recalcular Totales de Caja</h1>
+        <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Caja #{{ caja.numero }}</p>
+    </div>
+
+    <div class="warning-box">
+        <i class="fas fa-info-circle"></i>
+        <strong>Importante:</strong> Esta acción recalculará todos los totales de la caja basándose en las ventas actuales registradas. Los valores anteriores serán reemplazados.
+    </div>
+
+    <h3><i class="fas fa-exchange-alt"></i> Comparación de Valores</h3>
+    
+    <div class="comparison-grid">
+        <div class="comparison-card card-before">
+            <div class="comparison-label">Valores Actuales</div>
+            <div class="comparison-value" style="color: #dc2626;">
+                ${{ totales_actuales.total|floatformat:2 }}
+            </div>
+            <div style="font-size: 0.875rem; color: #6b7280;">
+                <div class="detail-item">
+                    <span>Efectivo:</span>
+                    <strong>${{ totales_actuales.efectivo|floatformat:2 }}</strong>
+                </div>
+                <div class="detail-item">
+                    <span>Transferencia:</span>
+                    <strong>${{ totales_actuales.transferencia|floatformat:2 }}</strong>
+                </div>
+                <div class="detail-item">
+                    <span>Cantidad:</span>
+                    <strong>{{ totales_actuales.cantidad }} ventas</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-card card-after">
+            <div class="comparison-label">Valores Recalculados</div>
+            <div class="comparison-value" style="color: #059669;">
+                ${{ totales_reales.total|floatformat:2 }}
+            </div>
+            <div style="font-size: 0.875rem; color: #6b7280;">
+                <div class="detail-item">
+                    <span>Efectivo:</span>
+                    <strong>${{ totales_reales.efectivo|floatformat:2 }}</strong>
+                </div>
+                <div class="detail-item">
+                    <span>Transferencia:</span>
+                    <strong>${{ totales_reales.transferencia|floatformat:2 }}</strong>
+                </div>
+                <div class="detail-item">
+                    <span>Cantidad:</span>
+                    <strong>{{ totales_reales.cantidad }} ventas</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if totales_actuales.total != totales_reales.total %}
+    <div style="background: #fef3c7; padding: 1rem; border-radius: 8px; text-align: center; margin: 1.5rem 0;">
+        <strong style="color: #92400e;">
+            Diferencia detectada: 
+            ${{ diferencia|floatformat:2 }}
+            {% if diferencia > 0 %}
+                (El total real es mayor)
+            {% else %}
+                (El total real es menor)
+            {% endif %}
+        </strong>
+    </div>
+    {% else %}
+    <div style="background: #d1fae5; padding: 1rem; border-radius: 8px; text-align: center; margin: 1.5rem 0;">
+        <strong style="color: #065f46;">
+            <i class="fas fa-check-circle"></i> Los totales coinciden. No hay diferencias.
+        </strong>
+    </div>
+    {% endif %}
+
+    <form method="post" class="actions-container">
+        {% csrf_token %}
+        <p style="color: #6b7280; margin-bottom: 1.5rem;">
+            ¿Deseas actualizar los totales de la caja con los valores recalculados?
+        </p>
+        <button type="submit" class="btn-action btn-confirm">
+            <i class="fas fa-check"></i> Confirmar Recalculo
+        </button>
+        <a href="{% url 'caja_detalle' caja.id %}" class="btn-action btn-cancel">
+            <i class="fas fa-times"></i> Cancelar
+        </a>
+    </form>
+</div>
+{% endblock %}

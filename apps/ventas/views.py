@@ -1,6 +1,6 @@
-# apps/ventas/views.py - REEMPLAZAR COMPLETAMENTE
+# apps/ventas/views.py - VERSIÓN CORREGIDA SIN MODELO CAJA
 
-from .models import Venta, DetalleVenta
+from .models import Venta, DetalleVenta, AuditoriaMovimiento
 from apps.clientes.models import Cliente
 from apps.inventario.models import Producto
 from django.shortcuts import render, redirect, get_object_or_404
@@ -11,9 +11,6 @@ from django.http import HttpResponse
 from decimal import Decimal
 import json
 
-from .models import Venta, DetalleVenta, AuditoriaMovimiento  # ← AGREGAR AuditoriaMovimiento
-from apps.clientes.models import Cliente
-from apps.inventario.models import Producto
 
 @login_required
 def lista_ventas(request):
@@ -25,6 +22,7 @@ def lista_ventas(request):
 @login_required
 def crear_venta(request):
     """Crea una nueva venta"""
+    
     if request.method == 'POST':
         try:
             with transaction.atomic():
@@ -83,7 +81,6 @@ def crear_venta(request):
                     monto_efectivo = Decimal(str(request.POST.get('monto_efectivo', 0)))
                     monto_tarjeta = Decimal(str(request.POST.get('monto_tarjeta', 0)))
                     
-                    # Validar que la suma coincida con el total
                     if monto_efectivo + monto_tarjeta != total:
                         raise ValueError(f'Los montos del pago mixto deben sumar ${total}')
                 
@@ -113,11 +110,9 @@ def crear_venta(request):
                     producto = Producto.objects.select_for_update().get(id=prod['producto_id'])
                     cantidad = int(prod['cantidad'])
                     
-                    # Verificar stock
                     if producto.stock < cantidad:
                         raise ValueError(f'Stock insuficiente para {producto.descripcion}. Stock actual: {producto.stock}')
                     
-                    # Crear detalle
                     DetalleVenta.objects.create(
                         venta=venta,
                         producto=producto,
@@ -126,7 +121,6 @@ def crear_venta(request):
                         subtotal=Decimal(str(prod['subtotal']))
                     )
                     
-                    # Actualizar stock
                     producto.stock -= cantidad
                     producto.save()
                 
@@ -145,109 +139,6 @@ def crear_venta(request):
                     },
                     request=request
                 )
-                
-                messages.success(request, f'Venta #{nuevo_codigo} registrada exitosamente.')
-                return redirect('detalle_venta', pk=venta.id)
-                
-        except ValueError as e:
-            messages.error(request, str(e))
-        except json.JSONDecodeError:
-            messages.error(request, 'Error al procesar los datos del carrito')
-        except Producto.DoesNotExist:
-            messages.error(request, 'Uno o más productos no existen')
-        except Exception as e:
-            messages.error(request, f'Error al registrar la venta: {str(e)}')
-    
-    # GET request
-    clientes = Cliente.objects.filter(estado=1).order_by('nombre')
-    productos = Producto.objects.filter(estado=1, stock__gt=0).select_related('categoria', 'proveedor').order_by('descripcion')
-    
-    return render(request, 'ventas/crear_venta.html', {
-        'clientes': clientes,
-        'productos': productos
-    })
-    """Crea una nueva venta"""
-    if request.method == 'POST':
-        try:
-            with transaction.atomic():
-                # Obtener datos del formulario
-                cliente_id = request.POST.get('cliente')
-                tipo_pago = request.POST.get('tipo_pago')
-                observacion = request.POST.get('observacion', '')
-                
-                # Validar tipo de pago
-                tipos_validos = ['efectivo', 'debito', 'credito', 'transferencia', 'mixto']
-                if tipo_pago not in tipos_validos:
-                    raise ValueError('Método de pago inválido')
-                
-                # Obtener productos del JSON
-                productos_json = request.POST.get('productos')
-                if not productos_json:
-                    raise ValueError('No hay productos en el carrito')
-                
-                productos = json.loads(productos_json)
-                
-                if not productos:
-                    raise ValueError('El carrito está vacío')
-                
-                # Obtener descuento
-                descuento_json = request.POST.get('descuento', '{}')
-                descuento = json.loads(descuento_json)
-                
-                # Calcular subtotal
-                subtotal = Decimal('0')
-                for prod in productos:
-                    subtotal += Decimal(str(prod['subtotal']))
-                
-                # Calcular descuento
-                descuento_monto = Decimal('0')
-                if descuento.get('tipo') == 'porcentaje':
-                    descuento_monto = subtotal * (Decimal(str(descuento.get('valor', 0))) / 100)
-                elif descuento.get('tipo') == 'monto':
-                    descuento_monto = Decimal(str(descuento.get('valor', 0)))
-                
-                # Calcular total
-                total = subtotal - descuento_monto
-                
-                if total <= 0:
-                    raise ValueError('El total debe ser mayor a 0')
-                
-                # Generar código de venta
-                ultimo_codigo = Venta.objects.order_by('-codigo_venta').first()
-                nuevo_codigo = (ultimo_codigo.codigo_venta + 1) if ultimo_codigo else 1000
-                
-                # Crear venta
-                venta = Venta.objects.create(
-                    cliente_id=cliente_id if cliente_id else None,
-                    usuario=request.user,
-                    total=total,
-                    tipo_pago=tipo_pago,
-                    observacion=observacion,
-                    codigo_venta=nuevo_codigo,
-                    estado_venta=2  # Pagado
-                )
-                
-                # Crear detalles y actualizar stock
-                for prod in productos:
-                    producto = Producto.objects.select_for_update().get(id=prod['producto_id'])
-                    cantidad = int(prod['cantidad'])
-                    
-                    # Verificar stock
-                    if producto.stock < cantidad:
-                        raise ValueError(f'Stock insuficiente para {producto.descripcion}. Stock actual: {producto.stock}')
-                    
-                    # Crear detalle
-                    DetalleVenta.objects.create(
-                        venta=venta,
-                        producto=producto,
-                        cantidad=cantidad,
-                        precio_unitario=Decimal(str(prod['precio'])),
-                        subtotal=Decimal(str(prod['subtotal']))
-                    )
-                    
-                    # Actualizar stock
-                    producto.stock -= cantidad
-                    producto.save()
                 
                 messages.success(request, f'Venta #{nuevo_codigo} registrada exitosamente.')
                 return redirect('detalle_venta', pk=venta.id)

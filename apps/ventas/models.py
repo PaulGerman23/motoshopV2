@@ -1,5 +1,3 @@
-# apps/ventas/models.py - VERSIÓN FINAL CORREGIDA
-
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -9,7 +7,118 @@ from decimal import Decimal
 from datetime import timedelta, datetime, time
 
 # =====================================================================
-# MODELO: VENTA
+# MODELO: CAJA (NUEVO)
+# =====================================================================
+
+class Caja(models.Model):
+    ESTADO_CHOICES = [
+        ('abierta', 'Abierta'),
+        ('cerrada', 'Cerrada'),
+    ]
+    
+    usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='cajas')
+    
+    # Apertura
+    fecha_apertura = models.DateTimeField(auto_now_add=True)
+    monto_inicial = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    observaciones_apertura = models.TextField(blank=True)
+    
+    # Cierre
+    fecha_cierre = models.DateTimeField(null=True, blank=True)
+    monto_final_esperado = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    monto_final_real = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    diferencia = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    observaciones_cierre = models.TextField(blank=True)
+    
+    # Totales por método de pago
+    total_efectivo = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_debito = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_credito = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_transferencia = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_mixto = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    # Totales generales
+    total_ventas = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    cantidad_ventas = models.IntegerField(default=0)
+    
+    # Egresos
+    egresos = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    detalle_egresos = models.TextField(blank=True)
+    
+    estado = models.CharField(max_length=10, choices=ESTADO_CHOICES, default='abierta', db_index=True)
+    
+    class Meta:
+        db_table = 'cajas'
+        verbose_name = 'Caja'
+        verbose_name_plural = 'Cajas'
+        ordering = ['-fecha_apertura']
+    
+    def __str__(self):
+        return f"Caja {self.id} - {self.usuario.get_full_name()} - {self.fecha_apertura.strftime('%d/%m/%Y %H:%M')}"
+    
+    @staticmethod
+    def tiene_caja_abierta(usuario):
+        """Verifica si el usuario tiene una caja abierta"""
+        return Caja.objects.filter(usuario=usuario, estado='abierta').exists()
+    
+    @staticmethod
+    def obtener_caja_abierta(usuario):
+        """Obtiene la caja abierta del usuario"""
+        return Caja.objects.filter(usuario=usuario, estado='abierta').first()
+    
+    def calcular_totales(self):
+        """Calcula los totales de la caja basándose en las ventas asociadas"""
+        from django.db.models import Sum, Count
+        
+        ventas = self.ventas.filter(estado_venta__in=[1, 2])  # Pendiente y Pagado
+        
+        # Cantidad y total de ventas
+        self.cantidad_ventas = ventas.count()
+        self.total_ventas = ventas.aggregate(Sum('total'))['total__sum'] or Decimal('0')
+        
+        # Totales por método de pago
+        self.total_efectivo = ventas.filter(tipo_pago='efectivo').aggregate(Sum('total'))['total__sum'] or Decimal('0')
+        self.total_debito = ventas.filter(tipo_pago='debito').aggregate(Sum('total'))['total__sum'] or Decimal('0')
+        self.total_credito = ventas.filter(tipo_pago='credito').aggregate(Sum('total'))['total__sum'] or Decimal('0')
+        self.total_transferencia = ventas.filter(tipo_pago='transferencia').aggregate(Sum('total'))['total__sum'] or Decimal('0')
+        self.total_mixto = ventas.filter(tipo_pago='mixto').aggregate(Sum('total'))['total__sum'] or Decimal('0')
+        
+        # Para pagos mixtos, también sumar los montos específicos
+        pagos_mixtos = ventas.filter(tipo_pago='mixto')
+        for venta in pagos_mixtos:
+            self.total_efectivo += venta.monto_efectivo
+            self.total_debito += venta.monto_tarjeta
+        
+        # Calcular monto esperado
+        self.monto_final_esperado = self.monto_inicial + self.total_efectivo - self.egresos
+        
+        self.save()
+    
+    def cerrar(self, monto_final_real, observaciones_cierre='', egresos=0, detalle_egresos=''):
+        """Cierra la caja"""
+        self.fecha_cierre = timezone.localtime()
+        self.monto_final_real = monto_final_real
+        self.egresos = egresos
+        self.detalle_egresos = detalle_egresos
+        self.observaciones_cierre = observaciones_cierre
+        
+        # Calcular totales antes de cerrar
+        self.calcular_totales()
+        
+        # Calcular diferencia
+        self.diferencia = self.monto_final_real - self.monto_final_esperado
+        
+        self.estado = 'cerrada'
+        self.save()
+        
+        # Registrar en auditoría
+        AuditoriaMovimiento.registrar(
+            usuario=self.usuario,
+            accion='cierre_caja',
+            descripcion=f'Cierre de caja #{self.id} - Total: ${self.total_ventas} - Diferencia: ${self.diferencia}'
+        )
+# =====================================================================
+# MODELO: VENTA (ACTUALIZADO)
 # =====================================================================
 
 class Venta(models.Model):
@@ -27,6 +136,9 @@ class Venta(models.Model):
         (2, 'Pagado'),
     ]
 
+    # NUEVO: Relación con Caja
+    caja = models.ForeignKey(Caja, on_delete=models.SET_NULL, null=True, blank=True, related_name='ventas')
+    
     cliente = models.ForeignKey(Cliente, on_delete=models.SET_NULL, null=True, blank=True)
     usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     fecha = models.DateTimeField(auto_now_add=True)  
@@ -55,9 +167,8 @@ class Venta(models.Model):
         fecha_local = timezone.localtime(self.fecha).strftime('%d/%m/%Y')
         return f"Venta #{self.codigo_venta} - {fecha_local}"
 
-    # CORREGIDO
     def puede_devolverse(self):
-        """Evitar errores por timezone con fecha UTC"""
+        """Verifica si la venta puede ser devuelta"""
         if self.estado_venta == 0:
             return False
         
@@ -90,7 +201,6 @@ class DetalleVenta(models.Model):
     def save(self, *args, **kwargs):
         self.subtotal = self.cantidad * self.precio_unitario
         super().save(*args, **kwargs)
-
 
 # =====================================================================
 # MODELO: TICKET

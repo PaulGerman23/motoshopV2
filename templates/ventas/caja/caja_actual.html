@@ -1,0 +1,385 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Caja Actual - MotoShop{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">
+                {% if tiene_caja %}
+                    Caja Actual
+                {% else %}
+                    No Hay Caja Abierta
+                {% endif %}
+            </h1>
+            <p class="page-subtitle">{{ fecha|date:"d/m/Y" }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            {% if tiene_caja %}
+                <a href="{% url 'cerrar_caja' %}" class="btn btn-modern" style="background: #ef4444; color: white;">
+                    <i class="bi bi-lock"></i> Cerrar Caja
+                </a>
+            {% else %}
+                <a href="{% url 'abrir_caja' %}" class="btn btn-primary-modern btn-modern">
+                    <i class="bi bi-unlock"></i> Abrir Caja
+                </a>
+            {% endif %}
+            <a href="{% url 'historial_cajas' %}" class="btn btn-modern" style="background: #f3f4f6; color: #374151;">
+                <i class="bi bi-clock-history"></i> Historial
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if not tiene_caja %}
+    <!-- Sin Caja Abierta -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card text-center">
+                <div class="card-body py-5">
+                    <div style="font-size: 80px; color: #d1d5db; margin-bottom: 24px;">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                    <h3 class="mb-3">No tienes una caja abierta</h3>
+                    <p class="text-muted mb-4">
+                        Para registrar ventas, primero debes abrir una caja con el monto inicial en efectivo.
+                    </p>
+                    <a href="{% url 'abrir_caja' %}" class="btn btn-primary-modern btn-modern btn-lg">
+                        <i class="bi bi-unlock"></i> Abrir Caja Ahora
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <!-- Con Caja Abierta -->
+    
+    <!-- Info de la Caja -->
+    <div class="card mb-4" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-3 text-center">
+                    <div style="font-size: 64px; opacity: 0.9;">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                    <h6 style="opacity: 0.9;">Caja #{{ caja.id }}</h6>
+                </div>
+                <div class="col-md-9">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <small style="opacity: 0.9;">Apertura</small>
+                            <h5 class="mb-0">{{ caja.fecha_apertura|date:"d/m/Y H:i" }}</h5>
+                        </div>
+                        <div class="col-md-4">
+                            <small style="opacity: 0.9;">Monto Inicial</small>
+                            <h5 class="mb-0">${{ caja.monto_inicial }}</h5>
+                        </div>
+                        <div class="col-md-4">
+                            <small style="opacity: 0.9;">Usuario</small>
+                            <h5 class="mb-0">{{ caja.usuario.get_full_name }}</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-caja" style="border-left: 4px solid #10b981;">
+                <div class="stat-caja-icon efectivo">
+                    <i class="bi bi-cash-coin"></i>
+                </div>
+                <div>
+                    <div class="stat-caja-label">Efectivo</div>
+                    <div class="stat-caja-value">${{ total_efectivo }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-caja" style="border-left: 4px solid #3b82f6;">
+                <div class="stat-caja-icon tarjeta">
+                    <i class="bi bi-credit-card"></i>
+                </div>
+                <div>
+                    <div class="stat-caja-label">Débito</div>
+                    <div class="stat-caja-value">${{ total_debito }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-caja" style="border-left: 4px solid #8b5cf6;">
+                <div class="stat-caja-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                    <i class="bi bi-credit-card-2-front"></i>
+                </div>
+                <div>
+                    <div class="stat-caja-label">Crédito</div>
+                    <div class="stat-caja-value">${{ total_credito }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-caja" style="border-left: 4px solid #f59e0b;">
+                <div class="stat-caja-icon transferencia">
+                    <i class="bi bi-arrow-left-right"></i>
+                </div>
+                <div>
+                    <div class="stat-caja-label">Transferencia</div>
+                    <div class="stat-caja-value">${{ total_transferencia }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row g-4">
+        <!-- Resumen General -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Resumen de Ventas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center p-3" style="background: #f9fafb; border-radius: 12px;">
+                                <div>
+                                    <small class="text-muted">Total Ventas</small>
+                                    <h4 class="mb-0 text-success">${{ total_ventas }}</h4>
+                                </div>
+                                <div style="width: 50px; height: 50px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-currency-dollar" style="font-size: 24px; color: #10b981;"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center p-3" style="background: #f9fafb; border-radius: 12px;">
+                                <div>
+                                    <small class="text-muted">Cantidad de Ventas</small>
+                                    <h4 class="mb-0 text-primary">{{ cantidad_ventas }}</h4>
+                                </div>
+                                <div style="width: 50px; height: 50px; background: rgba(102, 126, 234, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-receipt" style="font-size: 24px; color: #667eea;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico de métodos de pago -->
+                    <div class="mt-4">
+                        <h6 class="mb-3">Distribución por Método de Pago</h6>
+                        <canvas id="metodoPagoChart" height="80"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ventas Recientes -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Últimas Ventas</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>CÓDIGO</th>
+                                    <th>HORA</th>
+                                    <th>CLIENTE</th>
+                                    <th>MÉTODO</th>
+                                    <th>TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for venta in ventas_recientes %}
+                                <tr>
+                                    <td><span class="code-badge">#{{ venta.codigo_venta }}</span></td>
+                                    <td>{{ venta.fecha|date:"H:i" }}</td>
+                                    <td>
+                                        {% if venta.cliente %}
+                                            {{ venta.cliente.nombre_completo }}
+                                        {% else %}
+                                            <span class="text-muted">Consumidor Final</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="venta-metodo {{ venta.tipo_pago }}">
+                                            {{ venta.get_tipo_pago_display }}
+                                        </span>
+                                    </td>
+                                    <td><strong class="text-success">${{ venta.total }}</strong></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        No hay ventas registradas aún
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Acciones Rápidas -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-lightning"></i> Acciones Rápidas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'crear_venta' %}" class="btn btn-modern" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
+                            <i class="bi bi-plus-circle"></i>
+                            Nueva Venta
+                        </a>
+                        <a href="{% url 'lista_ventas' %}" class="btn btn-modern" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                            <i class="bi bi-receipt"></i>
+                            Ver Todas las Ventas
+                        </a>
+                        <a href="{% url 'cerrar_caja' %}" class="btn btn-modern" style="background: #ef4444; color: white;">
+                            <i class="bi bi-lock"></i>
+                            Cerrar Caja
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estado de la Caja -->
+            <div class="card">
+                <div class="card-header" style="background: #1f2937; color: white;">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Estado</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success d-flex align-items-start">
+                        <i class="bi bi-check-circle-fill me-2 mt-1"></i>
+                        <div>
+                            <strong>Caja Abierta</strong><br>
+                            <small>Puedes registrar ventas normalmente.</small>
+                        </div>
+                    </div>
+                    
+                    {% if caja.observaciones_apertura %}
+                    <div class="mb-2">
+                        <small class="text-muted">Observaciones de Apertura:</small>
+                        <p class="mb-0">{{ caja.observaciones_apertura }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.stat-caja {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.stat-caja-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+}
+
+.stat-caja-icon.efectivo {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.stat-caja-icon.tarjeta {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.stat-caja-icon.transferencia {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.stat-caja-label {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.stat-caja-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{% if tiene_caja %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Gráfico de métodos de pago
+const ctx = document.getElementById('metodoPagoChart').getContext('2d');
+new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Efectivo', 'Débito', 'Crédito', 'Transferencia'],
+        datasets: [{
+            data: [
+                {{ total_efectivo|default:"0" }},
+                {{ total_debito|default:"0" }},
+                {{ total_credito|default:"0" }},
+                {{ total_transferencia|default:"0" }}
+            ],
+            backgroundColor: [
+                '#10b981',
+                '#3b82f6',
+                '#8b5cf6',
+                '#f59e0b'
+            ],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 15,
+                    font: {
+                        size: 12
+                    }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.label + ': $' + context.parsed.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

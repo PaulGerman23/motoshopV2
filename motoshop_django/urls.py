@@ -11,8 +11,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', lambda request: redirect('dashboard')),
     path('dashboard/', login_required(TemplateView.as_view(template_name='dashboard.html')), name='dashboard'),
+    
+    # Apps
     path('inventario/', include('apps.inventario.urls')),
-    path('ventas/', include('apps.ventas.urls')),
+    path('ventas/', include('apps.ventas.urls')),  # ← Solo una vez
     path('clientes/', include('apps.clientes.urls')),
     path('proveedores/', include('apps.proveedores.urls')),
     path('usuarios/', include('apps.usuarios.urls')),

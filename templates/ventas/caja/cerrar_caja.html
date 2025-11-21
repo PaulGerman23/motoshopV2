@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}Cerrar Caja - MotoShop{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Cerrar Caja #{{ caja.id }}</h1>
+            <p class="page-subtitle">Apertura: {{ caja.fecha_apertura|date:"d/m/Y H:i" }}</p>
+        </div>
+        <a href="{% url 'caja_actual' %}" class="btn btn-modern" style="background: #f3f4f6; color: #374151;">
+            <i class="bi bi-arrow-left"></i> Cancelar
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Resumen Previo -->
+        <div class="card mb-4">
+            <div class="card-header" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Resumen de la Caja</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 text-center mb-4">
+                    <div class="col-md-3">
+                        <div class="p-3" style="background: #f9fafb; border-radius: 12px;">
+                            <i class="bi bi-wallet2" style="font-size: 32px; color: #667eea;"></i>
+                            <h4 class="mt-2 mb-0">${{ caja.monto_inicial }}</h4>
+                            <small class="text-muted">Monto Inicial</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3" style="background: #f9fafb; border-radius: 12px;">
+                            <i class="bi bi-receipt" style="font-size: 32px; color: #667eea;"></i>
+                            <h4 class="mt-2 mb-0">{{ caja.cantidad_ventas }}</h4>
+                            <small class="text-muted">Ventas</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3" style="background: #f9fafb; border-radius: 12px;">
+                            <i class="bi bi-currency-dollar" style="font-size: 32px; color: #10b981;"></i>
+                            <h4 class="mt-2 mb-0">${{ caja.total_ventas }}</h4>
+                            <small class="text-muted">Total</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3" style="background: #f9fafb; border-radius: 12px;">
+                            <i class="bi bi-cash-coin" style="font-size: 32px; color: #f59e0b;"></i>
+                            <h4 class="mt-2 mb-0">${{ caja.total_efectivo }}</h4>
+                            <small class="text-muted">Efectivo</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desglose por Método -->
+                <h6 class="mb-3">Desglose por Método de Pago</h6>
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between p-2" style="background: #f9fafb; border-radius: 8px;">
+                            <span><i class="bi bi-cash-coin text-success"></i> Efectivo:</span>
+                            <strong>${{ caja.total_efectivo }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between p-2" style="background: #f9fafb; border-radius: 8px;">
+                            <span><i class="bi bi-credit-card text-primary"></i> Débito:</span>
+                            <strong>${{ caja.total_debito }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between p-2" style="background: #f9fafb; border-radius: 8px;">
+                            <span><i class="bi bi-credit-card-2-front text-info"></i> Crédito:</span>
+                            <strong>${{ caja.total_credito }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between p-2" style="background: #f9fafb; border-radius: 8px;">
+                            <span><i class="bi bi-arrow-left-right text-warning"></i> Transferencia:</span>
+                            <strong>${{ caja.total_transferencia }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulario de Cierre -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-calculator"></i> Datos del Cierre</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="alert alert-info d-flex align-items-start mb-4">
+                        <i class="bi bi-info-circle me-2 mt-1"></i>
+                        <small>
+                            <strong>Importante:</strong> Cuenta el dinero físico en caja y verifica que coincida con el monto esperado.
+                        </small>
+                    </div>
+
+                    <!-- Egresos -->
+                    <div class="mb-4">
+                        <label class="form-label">Egresos (Gastos, Retiros)</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" name="egresos" step="0.01" min="0" 
+                                   value="0" id="inputEgresos">
+                        </div>
+                        <small class="text-muted">Dinero retirado o gastado durante el turno</small>
+                    </div>
+
+                    <!-- Detalle Egresos -->
+                    <div class="mb-4">
+                        <label class="form-label">Detalle de Egresos</label>
+                        <textarea class="form-control" name="detalle_egresos" rows="3" 
+                                  placeholder="Describe los egresos realizados..."></textarea>
+                    </div>
+
+                    <!-- Monto Final Real -->
+                    <div class="mb-4">
+                        <label class="form-label">Monto Final Real en Caja *</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" name="monto_final_real" step="0.01" min="0" 
+                                   placeholder="0.00" required id="inputMontoFinal">
+                        </div>
+                        <small class="text-muted">Monto total contado al final</small>
+                    </div>
+
+                    <!-- Observaciones -->
+                    <div class="mb-4">
+                        <label class="form-label">Observaciones del Cierre</label>
+                        <textarea class="form-control" name="observaciones_cierre" rows="3" 
+                                  placeholder="Notas sobre el cierre de caja..."></textarea>
+                    </div>
+
+                    <!-- Preview de Cálculos -->
+                    <div class="card mb-4" style="background: linear-gradient(135deg, #f9fafb, #ffffff); border: 2px solid #e5e7eb;">
+                        <div class="card-body">
+                            <h6 class="mb-3"><i class="bi bi-calculator"></i> Vista Previa</h6>
+                            
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Monto Inicial:</span>
+                                <strong>${{ caja.monto_inicial }}</strong>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Efectivo de Ventas:</span>
+                                <strong class="text-success">+${{ caja.total_efectivo }}</strong>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Egresos:</span>
+                                <strong class="text-danger" id="previewEgresos">-$0.00</strong>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="d-flex justify-content-between mb-2">
+                                <strong>Esperado en Caja:</strong>
+                                <strong id="previewEsperado">${{ monto_esperado }}</strong>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mb-2">
+                                <strong>Real en Caja:</strong>
+                                <strong id="previewReal">$0.00</strong>
+                            </div>
+                            
+                            <hr style="border-top: 2px solid #1f2937;">
+                            
+                            <div class="d-flex justify-content-between">
+                                <h5 class="mb-0">Diferencia:</h5>
+                                <h4 class="mb-0" id="previewDiferencia">$0.00</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'caja_actual' %}" class="btn btn-secondary flex-fill">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-modern flex-fill" style="background: #ef4444; color: white;">
+                            <i class="bi bi-lock"></i> Cerrar Caja
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Calcular preview en tiempo real
+const montoInicial = {{ caja.monto_inicial }};
+const efectivoVentas = {{ caja.total_efectivo }};
+
+function actualizarPreview() {
+    const egresos = parseFloat(document.getElementById('inputEgresos').value) || 0;
+    const montoFinal = parseFloat(document.getElementById('inputMontoFinal').value) || 0;
+    
+    const esperado = montoInicial + efectivoVentas - egresos;
+    const diferencia = montoFinal - esperado;
+    
+    // Actualizar preview
+    document.getElementById('previewEgresos').textContent = '-$' + egresos.toFixed(2);
+    document.getElementById('previewEsperado').textContent = '$' + esperado.toFixed(2);
+    document.getElementById('previewReal').textContent = '$' + montoFinal.toFixed(2);
+    
+    const diferenciaEl = document.getElementById('previewDiferencia');
+    diferenciaEl.textContent = (diferencia >= 0 ? '+' : '') + '$' + diferencia.toFixed(2);
+    
+    if (diferencia > 0) {
+        diferenciaEl.className = 'mb-0 text-success';
+    } else if (diferencia < 0) {
+        diferenciaEl.className = 'mb-0 text-danger';
+    } else {
+        diferenciaEl.className = 'mb-0 text-primary';
+    }
+}
+
+// Event listeners
+document.getElementById('inputEgresos').addEventListener('input', actualizarPreview);
+document.getElementById('inputMontoFinal').addEventListener('input', actualizarPreview);
+
+// Actualizar al cargar
+actualizarPreview();
+</script>
+{% endblock %}
